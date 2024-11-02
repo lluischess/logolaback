@@ -1,16 +1,21 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateAuthDto } from './dto/update-auth.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { User } from './entities/user.entity';
 import { Model } from 'mongoose';
 import * as bcryptjs from 'bcryptjs';
+import { LoginDto } from './dto/login.dto';
+import { JwtService } from '@nestjs/jwt';
+import { JwtPayload } from './interfaces/jwt-payload';
 
 @Injectable()
 export class AuthService {
 
   constructor(
-    @InjectModel(User.name) private userModel: Model<User>
+    @InjectModel(User.name) 
+    private userModel: Model<User>,
+    private jwtService: JwtService
   ) {
 
   }
@@ -37,6 +42,28 @@ export class AuthService {
 
   }
 
+  async login(loginDto: LoginDto) {
+
+    const { email, password } = loginDto;
+
+    const user = await this.userModel.findOne({ email });
+
+    if (!user) {
+      throw new UnauthorizedException('Email not found');
+    } 
+
+    if (!bcryptjs.compareSync(password, user.password)) {
+      throw new UnauthorizedException('Password invalid');
+    }
+
+    const { password: _, ...rest } = user.toJSON();
+
+    return {
+      user: rest,
+      token: this.getjwtToken({ id: user.id })
+    };
+  }
+
   findAll() {
     return `This action returns all auth`;
   }
@@ -51,5 +78,12 @@ export class AuthService {
 
   remove(id: number) {
     return `This action removes a #${id} auth`;
+  }
+
+  getjwtToken(payload: JwtPayload) {
+    const token = this.jwtService.sign(payload);
+
+    return token;
+    
   }
 }
