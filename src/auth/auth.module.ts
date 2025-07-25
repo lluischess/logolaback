@@ -23,5 +23,6 @@ import { ConfigModule } from '@nestjs/config';
       signOptions: { expiresIn: '12h' },
     }),
   ],
+  exports: [AuthService]
 })
 export class AuthModule {}
