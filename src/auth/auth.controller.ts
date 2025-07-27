@@ -8,10 +8,11 @@ import { User } from './entities/user.entity';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @Post()
-  create(@Body() createUserDto: CreateUserDto) {
-    return this.authService.create(createUserDto);
-  }
+  // CREACIÓN DE USUARIOS DESACTIVADA - Solo usuarios administradores predefinidos
+  // @Post()
+  // create(@Body() createUserDto: CreateUserDto) {
+  //   return this.authService.create(createUserDto);
+  // }
 
 
   @Post('/login')
@@ -19,10 +20,11 @@ export class AuthController {
     return this.authService.login(loginDto);
   }
 
-  @Post('/register')
-  register(@Body() registerDto: RegisterDto) {
-    return this.authService.register(registerDto);
-  }
+  // REGISTRO DESACTIVADO - Solo usuarios administradores predefinidos
+  // @Post('/register')
+  // register(@Body() registerDto: RegisterDto) {
+  //   return this.authService.register(registerDto);
+  // }
 
   @UseGuards( AuthGuard)
   @Get()

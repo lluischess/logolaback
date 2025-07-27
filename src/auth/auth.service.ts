@@ -104,4 +104,78 @@ export class AuthService {
     return token;
     
   }
+
+  // Método para inicializar los 4 usuarios administradores
+  async initializeAdminUsers() {
+    try {
+      console.log('🗑️  Eliminando todos los usuarios existentes...');
+      await this.userModel.deleteMany({});
+      console.log('✅ Usuarios existentes eliminados');
+
+      // Definir los 4 usuarios administradores
+      const adminUsers = [
+        {
+          name: 'Lluis Admin',
+          email: 'lluisadmin',
+          password: 'JFH83udjjc//0kke-',
+          isActive: true
+        },
+        {
+          name: 'Jordi Admin', 
+          email: 'jordiadmin',
+          password: 'V0lv0-Casamajor',
+          isActive: true
+        },
+        {
+          name: 'Anna Admin',
+          email: 'annaadmin', 
+          password: 'V0lv0-Clemente',
+          isActive: true
+        },
+        {
+          name: 'Invitado Admin',
+          email: 'invitadoadmin',
+          password: 'ijsfoi394dsf-ad!T',
+          isActive: true
+        }
+      ];
+
+      console.log('👥 Creando los 4 usuarios administradores...');
+      const createdUsers = [];
+      
+      for (const userData of adminUsers) {
+        const hashedPassword = bcryptjs.hashSync(userData.password, 10);
+        
+        const user = new this.userModel({
+          name: userData.name,
+          email: userData.email,
+          password: hashedPassword,
+          isActive: userData.isActive
+        });
+
+        await user.save();
+        const { password: _, ...userWithoutPassword } = user.toJSON();
+        createdUsers.push(userWithoutPassword);
+        console.log(`✅ Usuario creado: ${userData.email}`);
+      }
+
+      console.log('🎉 ¡Todos los usuarios administradores han sido creados exitosamente!');
+      
+      return {
+        success: true,
+        message: 'Usuarios administradores inicializados correctamente',
+        users: createdUsers,
+        credentials: [
+          { user: 'lluisadmin', password: 'JFH83udjjc//0kke-' },
+          { user: 'jordiadmin', password: 'V0lv0-Casamajor' },
+          { user: 'annaadmin', password: 'V0lv0-Clemente' },
+          { user: 'invitadoadmin', password: 'ijsfoi394dsf-ad!T' }
+        ]
+      };
+
+    } catch (error) {
+      console.error('❌ Error durante la inicialización:', error);
+      throw new InternalServerErrorException('Error al inicializar usuarios administradores');
+    }
+  }
 }
