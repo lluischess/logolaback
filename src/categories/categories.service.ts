@@ -2,12 +2,14 @@ import { Injectable, BadRequestException, NotFoundException } from '@nestjs/comm
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Category, CategoryDocument } from './schemas/category.schema';
+import { Product, ProductDocument } from '../products/schemas/product.schema';
 import { CreateCategoryDto, UpdateCategoryDto, QueryCategoryDto, ReorderCategoryDto } from './dto';
 
 @Injectable()
 export class CategoriesService {
   constructor(
     @InjectModel(Category.name) private categoryModel: Model<CategoryDocument>,
+    @InjectModel(Product.name) private productModel: Model<ProductDocument>,
   ) {}
 
   async create(createCategoryDto: CreateCategoryDto): Promise<Category> {
@@ -84,8 +86,21 @@ export class CategoriesService {
       this.categoryModel.countDocuments(filters)
     ]);
 
+    // Obtener conteo de productos para cada categoría
+    const categoriesWithProductCount = await Promise.all(
+      categories.map(async (category) => {
+        const productCount = await this.productModel.countDocuments({ 
+          categoria: category.nombre.toLowerCase() 
+        });
+        return {
+          ...category.toObject(),
+          productCount
+        };
+      })
+    );
+
     return {
-      categories,
+      categories: categoriesWithProductCount,
       pagination: {
         currentPage: page,
         totalPages: Math.ceil(total / limit),
