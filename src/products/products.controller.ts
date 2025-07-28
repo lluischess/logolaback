@@ -63,6 +63,12 @@ export class ProductsController {
     return await this.productsService.reorderProduct(reorderDto);
   }
 
+  @Patch(':id/order')
+  @UseGuards(AuthGuard)
+  async updateProductOrder(@Param('id') id: string, @Body() body: { orden: number }) {
+    return await this.productsService.updateProductOrder(id, body.orden);
+  }
+
   @Patch(':id')
   @UseGuards(AuthGuard)
   async update(@Param('id') id: string, @Body() updateProductDto: UpdateProductDto) {

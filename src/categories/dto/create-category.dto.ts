@@ -23,11 +23,6 @@ export class CreateCategoryDto {
   @IsBoolean()
   configuracionEspecial?: boolean = false;
 
-  @IsOptional()
-  @IsString()
-  @MaxLength(200, { message: 'La imagen no puede exceder 200 caracteres' })
-  imagen?: string;
-
   // Campos SEO
   @IsOptional()
   @IsString()

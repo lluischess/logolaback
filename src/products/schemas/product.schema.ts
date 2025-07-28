@@ -5,6 +5,9 @@ export type ProductDocument = Product & Document;
 
 @Schema({ timestamps: true })
 export class Product {
+  @Prop({ unique: true, index: true })
+  numeroProducto: number;
+
   @Prop({ required: true, trim: true, maxlength: 100 })
   nombre: string;
 
@@ -98,8 +101,18 @@ ProductSchema.index({ categoria: 1, ordenCategoria: 1 });
 ProductSchema.index({ publicado: 1, categoria: 1 });
 ProductSchema.index({ nombre: 'text', descripcion: 'text', ingredientes: 'text' });
 
-// Middleware para generar URL slug automáticamente
-ProductSchema.pre('save', function(next) {
+// Middleware para generar URL slug automáticamente y autonumeración
+ProductSchema.pre('save', async function(next) {
+  // Auto-generar número de producto si es un documento nuevo
+  if (this.isNew && !this.numeroProducto) {
+    try {
+      const lastProduct = await this.model('Product').findOne({}).sort({ numeroProducto: -1 }).exec() as any;
+      this.numeroProducto = lastProduct ? (lastProduct.numeroProducto + 1) : 1;
+    } catch (error) {
+      return next(error);
+    }
+  }
+  
   if (this.isModified('nombre') && !this.urlSlug) {
     this.urlSlug = this.nombre
       .toLowerCase()

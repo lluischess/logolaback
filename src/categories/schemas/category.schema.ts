@@ -20,9 +20,6 @@ export class Category {
   @Prop({ default: false })
   configuracionEspecial: boolean; // Para marcar si aparece en novedades de la home
 
-  @Prop({ required: false, maxlength: 200 })
-  imagen?: string;
-
   // Campos SEO
   @Prop({ maxlength: 60 })
   metaTitulo?: string;

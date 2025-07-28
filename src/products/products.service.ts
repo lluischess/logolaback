@@ -221,6 +221,98 @@ export class ProductsService {
     };
   }
 
+  async updateProductOrder(id: string, newOrder: number): Promise<Product> {
+    try {
+      console.log(`🔄 Iniciando updateProductOrder: ID=${id}, newOrder=${newOrder}`);
+      
+      // Validar que newOrder sea un número válido
+      if (!newOrder || newOrder < 1) {
+        throw new BadRequestException('El orden debe ser un número positivo mayor a 0');
+      }
+
+      // Obtener el producto que se va a mover
+      const productToMove = await this.productModel.findById(id).exec();
+      if (!productToMove) {
+        throw new NotFoundException(`Producto con ID ${id} no encontrado`);
+      }
+
+      const currentOrder = productToMove.ordenCategoria || 1;
+      const categoria = productToMove.categoria;
+      
+      console.log(`📝 Producto a mover: ${productToMove.nombre}, Orden actual: ${currentOrder}, Categoría: ${categoria}`);
+
+      // Si el orden no cambia, no hacer nada
+      if (currentOrder === newOrder) {
+        console.log('ℹ️ El orden no cambia, retornando producto sin modificar');
+        return productToMove;
+      }
+
+      // Buscar si existe otro producto con el nuevo orden en la misma categoría
+      const conflictingProduct = await this.productModel.findOne({
+        categoria: categoria,
+        ordenCategoria: newOrder,
+        _id: { $ne: id } // Excluir el producto actual
+      }).exec();
+
+      // Si hay conflicto, hacer swap (intercambio)
+      if (conflictingProduct) {
+        console.log(`⚠️ Conflicto detectado: Producto ${conflictingProduct.nombre} ya tiene orden ${newOrder}`);
+        console.log(`🔄 Intercambiando órdenes: ${productToMove.nombre} (${currentOrder} → ${newOrder}) con ${conflictingProduct.nombre} (${newOrder} → ${currentOrder})`);
+        
+        // Hacer intercambio sin transacción (simplificado)
+        // Paso 1: Mover el producto conflictivo a un orden temporal
+        const tempOrder = -Math.abs(Date.now()); // Orden temporal único
+        await this.productModel.findByIdAndUpdate(
+          conflictingProduct._id,
+          { ordenCategoria: tempOrder }
+        ).exec();
+        
+        // Paso 2: Mover el producto principal al nuevo orden
+        await this.productModel.findByIdAndUpdate(
+          id,
+          { ordenCategoria: newOrder }
+        ).exec();
+        
+        // Paso 3: Mover el producto conflictivo al orden anterior del producto principal
+        await this.productModel.findByIdAndUpdate(
+          conflictingProduct._id,
+          { ordenCategoria: currentOrder }
+        ).exec();
+        
+        console.log(`✅ Intercambio completado exitosamente`);
+      } else {
+        console.log('ℹ️ No hay conflicto, actualizando directamente');
+        // No hay conflicto, actualizar directamente
+        await this.productModel.findByIdAndUpdate(
+          id,
+          { ordenCategoria: newOrder }
+        ).exec();
+      }
+
+      // Retornar el producto actualizado
+      const updatedProduct = await this.productModel.findById(id).exec();
+      if (!updatedProduct) {
+        throw new NotFoundException(`Producto con ID ${id} no encontrado después de la actualización`);
+      }
+      
+      console.log(`✅ Orden actualizado exitosamente: ${updatedProduct.nombre} ahora tiene orden ${updatedProduct.ordenCategoria}`);
+      return updatedProduct;
+      
+    } catch (error) {
+      console.error('❌ Error en updateProductOrder:', error);
+      console.error('❌ Stack trace:', error.stack);
+      
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+      
+      throw new BadRequestException(`Error al actualizar el orden del producto: ${error.message}`);
+    }
+  }
+
   async getProductsByCategory(): Promise<{ [key: string]: Product[] }> {
     const products = await this.productModel
       .find({ publicado: true })
