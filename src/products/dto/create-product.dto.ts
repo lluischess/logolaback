@@ -66,8 +66,9 @@ export class CreateProductDto {
   precio?: number;
 
   @IsNumber()
+  @IsOptional()
   @Min(1)
-  ordenCategoria: number;
+  ordenCategoria?: number;
 
   @IsBoolean()
   @IsOptional()

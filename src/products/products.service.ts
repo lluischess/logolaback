@@ -140,6 +140,23 @@ export class ProductsService {
         }
       }
 
+      // Obtener el producto actual para comparar la categoría
+      const currentProduct = await this.productModel.findById(id).exec();
+      if (!currentProduct) {
+        throw new NotFoundException(`Producto con ID ${id} no encontrado`);
+      }
+
+      // Si se está cambiando la categoría, recalcular el ordenCategoria
+      if (updateProductDto.categoria && updateProductDto.categoria !== currentProduct.categoria) {
+        console.log(`🔄 Cambiando categoría de "${currentProduct.categoria}" a "${updateProductDto.categoria}"`);
+        
+        // Calcular el siguiente orden para la nueva categoría
+        const nextOrder = await this.getNextOrderForCategory(updateProductDto.categoria);
+        updateProductDto.ordenCategoria = nextOrder;
+        
+        console.log(`✅ Nuevo ordenCategoria asignado: ${nextOrder}`);
+      }
+
       const updatedProduct = await this.productModel
         .findByIdAndUpdate(id, updateProductDto, { new: true })
         .exec();
@@ -219,6 +236,45 @@ export class ProductsService {
     return {
       message: `"${product.nombre}" ${action} a la posición ${currentProduct.ordenCategoria} en ${product.categoria}`
     };
+  }
+
+  /**
+   * Obtener el siguiente orden disponible para una categoría
+   */
+  async getNextOrderForCategory(categoria: string): Promise<number> {
+    const maxOrderProduct = await this.productModel
+      .findOne({ categoria })
+      .sort({ ordenCategoria: -1 })
+      .exec();
+
+    return maxOrderProduct ? maxOrderProduct.ordenCategoria + 1 : 1;
+  }
+
+  /**
+   * Eliminar imagen de producto del servidor
+   */
+  async deleteProductImage(imagePath: string): Promise<{ success: boolean }> {
+    try {
+      const fs = require('fs');
+      const path = require('path');
+      
+      // Construir la ruta completa del archivo
+      const fullPath = path.join(process.cwd(), imagePath.replace(/^\//, ''));
+      
+      // Verificar si el archivo existe
+      if (fs.existsSync(fullPath)) {
+        // Eliminar el archivo
+        fs.unlinkSync(fullPath);
+        console.log(`✅ Imagen eliminada: ${fullPath}`);
+      } else {
+        console.log(`⚠️ Archivo no encontrado: ${fullPath}`);
+      }
+      
+      return { success: true };
+    } catch (error) {
+      console.error('❌ Error eliminando imagen:', error);
+      return { success: false };
+    }
   }
 
   async updateProductOrder(id: string, newOrder: number): Promise<Product> {
@@ -374,5 +430,64 @@ export class ProductsService {
         $inc: { ordenCategoria: -1 }
       }
     ).exec();
+  }
+
+  /**
+   * MÉTODO TEMPORAL: Restaurar valores correctos de ordenCategoria
+   * Asigna orden secuencial (1, 2, 3...) por categoría basado en fecha de creación
+   */
+  async restoreOrdenCategoria(): Promise<{message: string, restored: any[]}> {
+    try {
+      console.log('🔄 Iniciando restauración de ordenCategoria...');
+      
+      // Obtener todas las categorías únicas
+      const categorias = await this.productModel.distinct('categoria').exec();
+      console.log('📂 Categorías encontradas:', categorias);
+      
+      const restored = [];
+      
+      for (const categoria of categorias) {
+        console.log(`\n🔄 Procesando categoría: ${categoria}`);
+        
+        // Obtener productos de esta categoría ordenados por fecha de creación
+        const productos = await this.productModel
+          .find({ categoria })
+          .sort({ createdAt: 1 }) // Más antiguo primero
+          .exec();
+        
+        console.log(`   📦 Productos encontrados: ${productos.length}`);
+        
+        // Asignar orden secuencial (1, 2, 3, ...)
+        for (let i = 0; i < productos.length; i++) {
+          const nuevoOrden = i + 1;
+          
+          await this.productModel.updateOne(
+            { _id: productos[i]._id },
+            { $set: { ordenCategoria: nuevoOrden } }
+          ).exec();
+          
+          restored.push({
+            id: productos[i]._id,
+            nombre: productos[i].nombre,
+            categoria: categoria,
+            ordenAnterior: productos[i].ordenCategoria,
+            ordenNuevo: nuevoOrden
+          });
+          
+          console.log(`   ✅ ${productos[i].nombre} → ordenCategoria: ${nuevoOrden}`);
+        }
+      }
+      
+      console.log('\n🎉 ¡Restauración completada!');
+      
+      return {
+        message: `Restauración completada. ${restored.length} productos actualizados en ${categorias.length} categorías.`,
+        restored
+      };
+      
+    } catch (error) {
+      console.error('❌ Error en restauración:', error);
+      throw new BadRequestException('Error al restaurar ordenCategoria: ' + error.message);
+    }
   }
 }
