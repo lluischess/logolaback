@@ -104,7 +104,7 @@ function validateGeneralSettings(datos: any) {
 }
 
 function validateBannerConfig(datos: any) {
-  const required = ['titulo', 'imagenDesktop', 'ordenBanner'];
+  const required = ['titulo', 'imagen', 'ordenBanner'];
   for (const field of required) {
     if (datos[field] === undefined || datos[field] === null) {
       throw new Error(`Campo requerido faltante en Banner: ${field}`);
@@ -124,7 +124,7 @@ function validateImageUpload(datos: any) {
     }
   }
   
-  const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+  const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/ico'];
   if (!allowedTypes.includes(datos.tipo)) {
     throw new Error('Tipo de imagen no permitido');
   }

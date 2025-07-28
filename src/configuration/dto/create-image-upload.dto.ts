@@ -16,10 +16,18 @@ export class CreateImageUploadDto {
   @MaxLength(500, { message: 'La ruta no puede exceder 500 caracteres' })
   ruta: string;
 
+  @IsOptional()
+  @IsString()
+  @MaxLength(50, { message: 'La categoría no puede exceder 50 caracteres' })
+  @IsIn(['general', 'seo', 'banner-desktop', 'banner-mobile'], {
+    message: 'Categoría no válida. Permitidas: general, seo, banner-desktop, banner-mobile'
+  })
+  categoria?: string;
+
   @IsString()
   @IsNotEmpty()
-  @IsIn(['image/jpeg', 'image/png', 'image/gif', 'image/webp'], {
-    message: 'Tipo de archivo no permitido. Solo se permiten: JPEG, PNG, GIF, WebP'
+  @IsIn(['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/ico'], {
+    message: 'Tipo de archivo no permitido. Solo se permiten: JPEG, PNG, GIF, WebP, ICO'
   })
   tipo: string;
 

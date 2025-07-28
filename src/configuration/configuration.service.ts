@@ -52,6 +52,11 @@ export class ConfigurationService {
     return config;
   }
 
+  // Alias para actualización (usa la misma lógica que create)
+  async updateSeoConfig(createSeoConfigDto: CreateSeoConfigDto): Promise<Configuration> {
+    return this.createSeoConfig(createSeoConfigDto);
+  }
+
   // ==================== CONFIGURACIÓN FOOTER ====================
   async createFooterConfig(createFooterConfigDto: CreateFooterConfigDto): Promise<Configuration> {
     // Solo puede haber una configuración Footer activa
@@ -83,6 +88,11 @@ export class ConfigurationService {
     }
 
     return config;
+  }
+
+  // Alias para actualización (usa la misma lógica que create)
+  async updateFooterConfig(createFooterConfigDto: CreateFooterConfigDto): Promise<Configuration> {
+    return this.createFooterConfig(createFooterConfigDto);
   }
 
   // ==================== CONFIGURACIÓN GENERAL ====================
@@ -118,7 +128,96 @@ export class ConfigurationService {
     return config;
   }
 
+  // Alias para actualización (usa la misma lógica que create)
+  async updateGeneralConfig(createGeneralConfigDto: CreateGeneralConfigDto): Promise<Configuration> {
+    return this.createGeneralConfig(createGeneralConfigDto);
+  }
+
   // ==================== GESTIÓN DE BANNERS ====================
+  
+  async updateBannersConfig(bannersData: any): Promise<Configuration[]> {
+    try {
+      console.log('[ConfigurationService] === INICIO updateBannersConfig ===');
+      console.log('[ConfigurationService] Datos recibidos:', JSON.stringify(bannersData, null, 2));
+      
+      // Paso 1: Verificar conexión a la base de datos
+      console.log('[ConfigurationService] Paso 1: Verificando conexión a la base de datos...');
+      const testQuery = await this.configurationModel.countDocuments();
+      console.log(`[ConfigurationService] Conexión OK. Documentos en la colección: ${testQuery}`);
+      
+      // Paso 2: ELIMINAR banners existentes para evitar duplicación
+      console.log('[ConfigurationService] Paso 2: Eliminando banners existentes...');
+      const deleteResult = await this.configurationModel.deleteMany(
+        { tipo: ConfigurationType.BANNERS }
+      );
+      console.log(`[ConfigurationService] Banners eliminados: ${deleteResult.deletedCount}`);
+
+      const results: Configuration[] = [];
+      
+      // Paso 3: Validar datos de entrada
+      if (!bannersData || !bannersData.banners) {
+        console.log('[ConfigurationService] No hay datos de banners para procesar');
+        return results;
+      }
+      
+      if (!Array.isArray(bannersData.banners)) {
+        console.error('[ConfigurationService] bannersData.banners no es un array:', typeof bannersData.banners);
+        throw new Error('Los datos de banners deben ser un array');
+      }
+      
+      console.log(`[ConfigurationService] Paso 3: Procesando ${bannersData.banners.length} banners...`);
+      
+      // Paso 4: Procesar cada banner individualmente
+      for (let i = 0; i < bannersData.banners.length; i++) {
+        const bannerData = bannersData.banners[i];
+        console.log(`[ConfigurationService] Procesando banner ${i + 1}:`, JSON.stringify(bannerData, null, 2));
+        
+        try {
+          // Crear objeto de configuración mínimo para testing
+          const bannerConfig = {
+            tipo: ConfigurationType.BANNERS,
+            nombre: `Banner ${bannerData.titulo || 'Sin título'} - ${Date.now()}`,
+            datos: {
+              titulo: bannerData.titulo || '',
+              subtitulo: bannerData.subtitulo || '',
+              imagen: bannerData.imagen || '',
+              imagenMobile: bannerData.imagenMobile || '',
+              enlace: bannerData.enlace || '',
+              activo: bannerData.activo !== undefined ? bannerData.activo : true,
+              ordenBanner: bannerData.orden || (i + 1)
+            },
+            activo: true
+          };
+          
+          console.log(`[ConfigurationService] Objeto a guardar:`, JSON.stringify(bannerConfig, null, 2));
+          
+          const newBanner = new this.configurationModel(bannerConfig);
+          console.log(`[ConfigurationService] Modelo creado, guardando...`);
+          
+          const result = await newBanner.save();
+          results.push(result);
+          console.log(`[ConfigurationService] Banner ${i + 1} guardado exitosamente con ID: ${result._id}`);
+          
+        } catch (bannerError) {
+          console.error(`[ConfigurationService] ERROR al guardar banner ${i + 1}:`);
+          console.error(`[ConfigurationService] Error name: ${bannerError.name}`);
+          console.error(`[ConfigurationService] Error message: ${bannerError.message}`);
+          console.error(`[ConfigurationService] Error stack:`, bannerError.stack);
+          throw bannerError;
+        }
+      }
+      
+      console.log(`[ConfigurationService] === FIN updateBannersConfig === Guardados: ${results.length} banners`);
+      return results;
+      
+    } catch (error) {
+      console.error('[ConfigurationService] === ERROR GENERAL en updateBannersConfig ===');
+      console.error(`[ConfigurationService] Error name: ${error.name}`);
+      console.error(`[ConfigurationService] Error message: ${error.message}`);
+      console.error(`[ConfigurationService] Error stack:`, error.stack);
+      throw error;
+    }
+  }
   async createBanner(createBannerConfigDto: CreateBannerConfigDto): Promise<Configuration> {
     // Verificar que no exista otro banner con el mismo orden
     const existingBanner = await this.configurationModel.findOne({

@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Put,
   Body,
   Patch,
   Param,
@@ -9,8 +10,13 @@ import {
   Query,
   UseGuards,
   HttpCode,
-  HttpStatus
+  HttpStatus,
+  UseInterceptors,
+  UploadedFile
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { extname } from 'path';
 import { ConfigurationService } from './configuration.service';
 import { AuthGuard } from '../auth/guards/auth.guard';
 import {
@@ -70,10 +76,24 @@ export class ConfigurationController {
   }
 
   @UseGuards(AuthGuard)
+  @Put('seo')
+  @HttpCode(HttpStatus.OK)
+  updateSeoConfig(@Body() createSeoConfigDto: CreateSeoConfigDto) {
+    return this.configurationService.updateSeoConfig(createSeoConfigDto);
+  }
+
+  @UseGuards(AuthGuard)
   @Post('footer')
   @HttpCode(HttpStatus.CREATED)
   createFooterConfig(@Body() createFooterConfigDto: CreateFooterConfigDto) {
     return this.configurationService.createFooterConfig(createFooterConfigDto);
+  }
+
+  @UseGuards(AuthGuard)
+  @Put('footer')
+  @HttpCode(HttpStatus.OK)
+  updateFooterConfig(@Body() createFooterConfigDto: CreateFooterConfigDto) {
+    return this.configurationService.updateFooterConfig(createFooterConfigDto);
   }
 
   @UseGuards(AuthGuard)
@@ -84,10 +104,24 @@ export class ConfigurationController {
   }
 
   @UseGuards(AuthGuard)
+  @Put('general')
+  @HttpCode(HttpStatus.OK)
+  updateGeneralConfig(@Body() createGeneralConfigDto: CreateGeneralConfigDto) {
+    return this.configurationService.updateGeneralConfig(createGeneralConfigDto);
+  }
+
+  @UseGuards(AuthGuard)
   @Post('banners')
   @HttpCode(HttpStatus.CREATED)
   createBanner(@Body() createBannerConfigDto: CreateBannerConfigDto) {
     return this.configurationService.createBanner(createBannerConfigDto);
+  }
+
+  @UseGuards(AuthGuard)
+  @Put('banners')
+  @HttpCode(HttpStatus.OK)
+  updateBannersConfig(@Body() bannersData: any) {
+    return this.configurationService.updateBannersConfig(bannersData);
   }
 
   @UseGuards(AuthGuard)
@@ -112,9 +146,58 @@ export class ConfigurationController {
   }
 
   @UseGuards(AuthGuard)
-  @Post('images')
+  @Post('images/upload')
   @HttpCode(HttpStatus.CREATED)
-  uploadImage(@Body() createImageUploadDto: CreateImageUploadDto) {
+  @UseInterceptors(FileInterceptor('file', {
+    storage: diskStorage({
+      destination: './uploads/images',
+      filename: (req, file, cb) => {
+        // Generar nombre único para el archivo
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        const fileExtension = extname(file.originalname);
+        const fileName = `${file.fieldname}-${uniqueSuffix}${fileExtension}`;
+        cb(null, fileName);
+      },
+    }),
+    fileFilter: (req, file, cb) => {
+      // Validar tipos de archivo permitidos
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/ico'];
+      if (allowedTypes.includes(file.mimetype)) {
+        cb(null, true);
+      } else {
+        cb(new Error('Tipo de archivo no permitido. Solo se permiten imágenes (JPEG, PNG, GIF, WebP, ICO)'), false);
+      }
+    },
+    limits: {
+      fileSize: 5 * 1024 * 1024, // 5MB máximo
+    },
+  }))
+  uploadImage(
+    @UploadedFile() file: any,
+    @Body('category') category?: string
+  ) {
+    console.log('=== UPLOAD IMAGE DEBUG ===');
+    console.log('File received:', file);
+    console.log('Category received:', category);
+    
+    if (!file) {
+      console.error('ERROR: No file provided');
+      throw new Error('No se ha proporcionado ningún archivo');
+    }
+
+    // Crear DTO con la información del archivo subido
+    const createImageUploadDto: CreateImageUploadDto = {
+      nombre: file.filename,
+      nombreOriginal: file.originalname,
+      ruta: `http://localhost:3000/uploads/images/${file.filename}`,
+      categoria: category || 'general',
+      tamaño: file.size,
+      tipo: file.mimetype
+    };
+    
+    console.log('DTO created:', createImageUploadDto);
+    console.log('=== END DEBUG ===');
+
     return this.configurationService.uploadImage(createImageUploadDto);
   }
 
