@@ -4,6 +4,7 @@ import { CreateUserDto, LoginDto, RegisterDto, UpdateAuthDto } from './dto';
 import { AuthGuard } from './guards/auth.guard';
 import { User } from './entities/user.entity';
 
+
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
@@ -20,6 +21,15 @@ export class AuthController {
     return this.authService.login(loginDto);
   }
 
+  @Get('test')
+  testConnection() {
+    return { 
+      message: 'Backend conectado correctamente',
+      timestamp: new Date().toISOString(),
+      status: 'OK'
+    };
+  }
+
   // REGISTRO DESACTIVADO - Solo usuarios administradores predefinidos
   // @Post('/register')
   // register(@Body() registerDto: RegisterDto) {
@@ -33,14 +43,14 @@ export class AuthController {
     return this.authService.findAll();
   }
 
-  @UseGuards( AuthGuard)
-  @Get('/check-token')
-  checkToken( @Request() req: Request ) {
-    const user = req['user'] as User;
+  @Get('check-token')
+  @UseGuards(AuthGuard)
+  checkToken(@Request() req: any) {
+    const user = req['user'];
     return {
       user,
       token: this.authService.getjwtToken({ id: user._id })
-    }
+    };
   }
 
   // @Get(':id')
