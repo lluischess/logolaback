@@ -1,10 +1,9 @@
 export interface BudgetProduct {
-  productId: string;
-  nombre: string;
-  referencia: string;
-  cantidad: number;
-  precioUnitario?: number;
-  subtotal?: number;
+  productId: string;         // Referencia al ID del producto en la tabla productos
+  cantidad: number;          // Cantidad solicitada en el presupuesto
+  precioUnitario: number;    // Precio específico del presupuesto (editable, independiente del precio del producto)
+  // Los siguientes campos se obtienen por JOIN con la tabla productos:
+  // - nombre, imagen, categoria (no se almacenan aquí)
 }
 
 export interface ClientData {

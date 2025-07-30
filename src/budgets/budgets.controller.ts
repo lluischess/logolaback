@@ -60,6 +60,20 @@ export class BudgetsController {
     return this.budgetsService.findByOrderNumber(numeroPedido);
   }
 
+  // Endpoint enriquecido para obtener presupuesto por ID con datos de productos
+  @UseGuards(AuthGuard)
+  @Get(':id/enriched')
+  findOneEnriched(@Param('id') id: string) {
+    return this.budgetsService.findOneEnriched(id);
+  }
+
+  // Endpoint enriquecido para obtener presupuesto por numeroPresupuesto con datos de productos (PÚBLICO)
+  @Get('numero/:numeroPresupuesto/enriched')
+  findByNumeroPresupuestoEnriched(@Param('numeroPresupuesto') numeroPresupuesto: string) {
+    const numero = parseInt(numeroPresupuesto);
+    return this.budgetsService.findByNumeroPresupuestoEnriched(numero);
+  }
+
   @UseGuards(AuthGuard)
   @Get(':id')
   findOne(@Param('id') id: string) {

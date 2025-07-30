@@ -26,15 +26,13 @@ export class Budget {
   })
   cliente: ClientData;
 
-  // Productos del presupuesto
+  // Productos del presupuesto (solo referencias + datos específicos del presupuesto)
   @Prop({
     type: [{
-      productId: { type: String, required: true },
-      nombre: { type: String, required: true },
-      referencia: { type: String, required: true },
+      productId: { type: String, required: true }, // Referencia al producto en la tabla productos
       cantidad: { type: Number, required: true, min: 1 },
-      precioUnitario: { type: Number, required: false, min: 0 },
-      subtotal: { type: Number, required: false, min: 0 }
+      precioUnitario: { type: Number, required: true, min: 0 } // Precio específico del presupuesto (editable)
+      // NO almacenar: nombre, imagen, categoria (se obtienen por JOIN con tabla productos)
     }],
     required: true
   })

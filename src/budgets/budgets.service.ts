@@ -4,6 +4,8 @@ import { Model } from 'mongoose';
 import { Budget, BudgetDocument } from './schemas/budget.schema';
 import { CreateBudgetDto, UpdateBudgetDto, QueryBudgetDto } from './dto';
 import { BudgetStatus } from './interfaces/budget.interface';
+// Importar modelo de productos para hacer JOIN
+import { Product, ProductDocument } from '../products/schemas/product.schema';
 
 @Injectable()
 export class BudgetsService {
@@ -11,6 +13,7 @@ export class BudgetsService {
 
   constructor(
     @InjectModel(Budget.name) private budgetModel: Model<BudgetDocument>,
+    @InjectModel(Product.name) private productModel: Model<ProductDocument>,
   ) {}
 
   async create(createBudgetDto: CreateBudgetDto): Promise<Budget> {
@@ -330,5 +333,110 @@ export class BudgetsService {
       message: `Se procesaron ${processed} presupuestos con emails fallidos`,
       processed
     };
+  }
+
+  /**
+   * Enriquecer presupuestos con datos de productos (JOIN)
+   * Combina la referencia del producto con sus datos actuales
+   */
+  async enrichBudgetWithProducts(budget: any): Promise<any> {
+    try {
+      const enrichedProducts = [];
+      
+      for (const budgetProduct of budget.productos) {
+        // Buscar el producto real en la tabla productos
+        const productId = budgetProduct.productId;
+        this.logger.log(`🔍 Buscando producto con ID: ${productId}`);
+        this.logger.log(`🔍 Tipo de productId: ${typeof productId}`);
+        
+        let product = null;
+        try {
+          // Usar consulta directa con MongoDB para asegurar que obtenemos todos los campos
+          const { ObjectId } = require('mongoose').Types;
+          if (ObjectId.isValid(productId)) {
+            // Usar findOne con select explícito para asegurar que obtenemos todos los campos
+            product = await this.productModel.findOne({ _id: new ObjectId(productId) })
+              .select('nombre categoria descripcion imagenes precio numeroProducto referencia')
+              .lean()
+              .exec();
+            
+            this.logger.log(`🔍 Producto encontrado: ${product ? 'SÍ' : 'NO'}`);
+            if (product) {
+              this.logger.log(`🔍 Nombre del producto: "${product.nombre}"`);
+              this.logger.log(`🔍 Categoría: "${product.categoria}"`);
+            }
+          }
+        } catch (error) {
+          this.logger.error(`❌ Error buscando producto ${productId}:`, error.message);
+        }
+        
+        if (product && product.nombre) {
+          this.logger.log(`✅ Producto encontrado: ${product.nombre}`);
+          // Combinar datos: referencia del presupuesto + datos actuales del producto
+          enrichedProducts.push({
+            // Datos específicos del presupuesto (editables)
+            productoId: productId,
+            cantidad: budgetProduct.cantidad,
+            precioUnitario: budgetProduct.precioUnitario,
+            precioTotal: budgetProduct.cantidad * budgetProduct.precioUnitario,
+            
+            // Datos actuales del producto (de la tabla productos)
+            nombre: product.nombre,
+            categoria: product.categoria,
+            imagen: product.imagenes?.[0] || '/assets/images/producto-placeholder.jpg',
+            descripcion: product.descripcion,
+            // Nota: NO usamos product.precio, usamos budgetProduct.precioUnitario
+          });
+        } else {
+          // Producto no encontrado - mantener datos básicos
+          this.logger.warn(`❌ Producto no encontrado o sin nombre: ${productId}`);
+          enrichedProducts.push({
+            productoId: productId,
+            cantidad: budgetProduct.cantidad,
+            precioUnitario: budgetProduct.precioUnitario,
+            precioTotal: budgetProduct.cantidad * budgetProduct.precioUnitario,
+            nombre: 'Producto no encontrado',
+            categoria: 'Sin categoría',
+            imagen: '/assets/images/producto-placeholder.jpg'
+          });
+        }
+      }
+      
+      this.logger.log(`🎯 Productos enriquecidos: ${enrichedProducts.length}`);
+      
+      // Retornar presupuesto con productos enriquecidos
+      return {
+        ...budget.toObject(),
+        productos: enrichedProducts
+      };
+      
+    } catch (error) {
+      this.logger.error(`Error enriqueciendo presupuesto con productos: ${error.message}`);
+      return budget;
+    }
+  }
+
+  /**
+   * Obtener presupuesto por ID con productos enriquecidos
+   */
+  async findOneEnriched(id: string): Promise<any> {
+    const budget = await this.budgetModel.findById(id).exec();
+    if (!budget) {
+      throw new NotFoundException(`Presupuesto con ID ${id} no encontrado`);
+    }
+    
+    return this.enrichBudgetWithProducts(budget);
+  }
+
+  /**
+   * Obtener presupuesto por numeroPresupuesto con productos enriquecidos
+   */
+  async findByNumeroPresupuestoEnriched(numeroPresupuesto: number): Promise<any> {
+    const budget = await this.budgetModel.findOne({ numeroPresupuesto }).exec();
+    if (!budget) {
+      throw new NotFoundException(`Presupuesto #${numeroPresupuesto} no encontrado`);
+    }
+    
+    return this.enrichBudgetWithProducts(budget);
   }
 }
