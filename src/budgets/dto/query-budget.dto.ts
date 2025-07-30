@@ -18,7 +18,7 @@ export class QueryBudgetDto {
 
   @IsOptional()
   @IsString()
-  sortBy?: string = 'createdAt';
+  sortBy?: string = 'numeroPresupuesto';
 
   @IsOptional()
   @IsString()

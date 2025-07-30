@@ -196,7 +196,7 @@ export class ConfigurationService {
           
           const result = await newBanner.save();
           results.push(result);
-          console.log(`[ConfigurationService] Banner ${i + 1} guardado exitosamente con ID: ${result._id}`);
+          console.log(`[ConfigurationService] Banner ${i + 1} guardado correctamente con ID: ${result._id}`);
           
         } catch (bannerError) {
           console.error(`[ConfigurationService] ERROR al guardar banner ${i + 1}:`);

@@ -9,6 +9,9 @@ export class Budget {
   @Prop({ unique: true })
   numeroPedido: string;
 
+  @Prop({ type: Number, unique: true })
+  numeroPresupuesto: number;
+
   // Datos del cliente
   @Prop({ 
     type: {
@@ -112,7 +115,7 @@ export class Budget {
 
 export const BudgetSchema = SchemaFactory.createForClass(Budget);
 
-// Middleware para generar número de pedido automáticamente
+// Middleware para generar número de pedido y número de presupuesto automáticamente
 BudgetSchema.pre('save', async function(next) {
   if (this.isNew) {
     // Generar número de pedido único basado en fecha y contador
@@ -132,6 +135,14 @@ BudgetSchema.pre('save', async function(next) {
     
     const counter = (count + 1).toString().padStart(3, '0');
     this.numeroPedido = `LOG-${year}${month}${day}-${counter}`;
+
+    // Generar número de presupuesto autonumérico
+    const maxNumeroPresupuesto = await (this.constructor as any)
+      .findOne({}, { numeroPresupuesto: 1 })
+      .sort({ numeroPresupuesto: -1 })
+      .exec();
+    
+    this.numeroPresupuesto = maxNumeroPresupuesto ? maxNumeroPresupuesto.numeroPresupuesto + 1 : 1;
 
     // Inicializar historial de estados
     this.historialEstados = [{
@@ -164,6 +175,7 @@ BudgetSchema.pre('findOneAndUpdate', function(next) {
 
 // Índices para optimizar consultas
 BudgetSchema.index({ numeroPedido: 1 });
+BudgetSchema.index({ numeroPresupuesto: -1 }); // Ordenamiento descendente por defecto
 BudgetSchema.index({ 'cliente.email': 1 });
 BudgetSchema.index({ estado: 1 });
 BudgetSchema.index({ createdAt: -1 });
