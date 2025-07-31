@@ -51,7 +51,8 @@ export class CategoriesService {
       sortOrder = 'asc',
       search,
       publicado,
-      configuracionEspecial
+      configuracionEspecial,
+      orden
     } = queryDto;
 
     const skip = (page - 1) * limit;
@@ -74,6 +75,10 @@ export class CategoriesService {
 
     if (configuracionEspecial !== undefined) {
       filters.configuracionEspecial = configuracionEspecial;
+    }
+
+    if (orden !== undefined) {
+      filters.orden = orden;
     }
 
     const [categories, total] = await Promise.all([

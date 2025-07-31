@@ -36,4 +36,10 @@ export class QueryCategoryDto {
   @IsBoolean()
   @Transform(({ value }) => value === 'true')
   configuracionEspecial?: boolean;
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Transform(({ value }) => parseInt(value))
+  orden?: number;
 }
