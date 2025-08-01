@@ -37,6 +37,11 @@ export class ProductsController {
     return await this.productsService.findAll(queryDto);
   }
 
+  @Get('search')
+  async searchProducts(@Query('q') searchTerm: string) {
+    return await this.productsService.searchProducts(searchTerm);
+  }
+
   @Get('stats')
   @UseGuards(AuthGuard)
   async getStats() {

@@ -127,6 +127,29 @@ export class ProductsService {
       .exec();
   }
 
+  async searchProducts(searchTerm: string): Promise<Product[]> {
+    if (!searchTerm || searchTerm.trim().length === 0) {
+      return [];
+    }
+
+    const trimmedSearchTerm = searchTerm.trim();
+    
+    // Buscar por nombre, referencia o categoría (case insensitive)
+    const searchQuery = {
+      publicado: true, // Solo productos publicados
+      $or: [
+        { nombre: { $regex: trimmedSearchTerm, $options: 'i' } },
+        { referencia: { $regex: trimmedSearchTerm, $options: 'i' } },
+        { categoria: { $regex: trimmedSearchTerm, $options: 'i' } }
+      ]
+    };
+
+    return await this.productModel
+      .find(searchQuery)
+      .sort({ categoria: 1, ordenCategoria: 1 })
+      .exec();
+  }
+
   async update(id: string, updateProductDto: UpdateProductDto): Promise<Product> {
     try {
       // Si se actualiza la referencia, verificar que sea única
