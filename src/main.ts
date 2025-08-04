@@ -7,6 +7,10 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
+  // Configurar límites de body parser para archivos grandes
+  app.use(require('express').json({ limit: '50mb' }));
+  app.use(require('express').urlencoded({ limit: '50mb', extended: true }));
+
   // Configurar CORS para permitir conexiones desde Angular
   app.enableCors({
     origin: ['http://localhost:4200', 'http://127.0.0.1:4200', 'http://localhost:4201', 'http://127.0.0.1:4201', 'http://localhost:4202', 'http://127.0.0.1:4202'],

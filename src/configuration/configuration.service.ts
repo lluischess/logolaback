@@ -173,21 +173,33 @@ export class ConfigurationService {
         console.log(`[ConfigurationService] Procesando banner ${i + 1}:`, JSON.stringify(bannerData, null, 2));
         
         try {
-          // Crear objeto de configuración mínimo para testing
+          // Crear objeto de configuración completo con todos los campos
           const bannerConfig = {
             tipo: ConfigurationType.BANNERS,
             nombre: `Banner ${bannerData.titulo || 'Sin título'} - ${Date.now()}`,
             datos: {
               titulo: bannerData.titulo || '',
               subtitulo: bannerData.subtitulo || '',
-              imagen: bannerData.imagen || '',
+              // Mapear campos del frontend al backend
+              imagenDesktop: bannerData.imagenDesktop || bannerData.imagen || '',
               imagenMobile: bannerData.imagenMobile || '',
-              enlace: bannerData.enlace || '',
-              activo: bannerData.activo !== undefined ? bannerData.activo : true,
-              ordenBanner: bannerData.orden || (i + 1)
+              enlaceButton: bannerData.enlaceButton || bannerData.enlace || '',
+              nombreButton: bannerData.nombreButton || 'Ver Más',
+              ordenBanner: bannerData.ordenBanner || bannerData.orden || (i + 1),
+              colorBoton: bannerData.colorBoton || '#3B82F6',
+              colorTitulos: bannerData.colorTitulos || '#FFFFFF',
+              activo: bannerData.activo !== undefined ? bannerData.activo : true
             },
             activo: true
           };
+          
+          console.log(`[ConfigurationService] Datos completos a guardar para banner ${i + 1}:`, {
+            enlaceButton: bannerConfig.datos.enlaceButton,
+            nombreButton: bannerConfig.datos.nombreButton,
+            colorBoton: bannerConfig.datos.colorBoton,
+            colorTitulos: bannerConfig.datos.colorTitulos,
+            imagenDesktop: bannerConfig.datos.imagenDesktop
+          });
           
           console.log(`[ConfigurationService] Objeto a guardar:`, JSON.stringify(bannerConfig, null, 2));
           

@@ -11,10 +11,10 @@ export class CreateBannerConfigDto {
   @MaxLength(200, { message: 'El subtítulo no puede exceder 200 caracteres' })
   subtitulo?: string;
 
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
   @MaxLength(255, { message: 'La URL de la imagen desktop no puede exceder 255 caracteres' })
-  imagenDesktop: string;
+  imagenDesktop?: string;
 
   @IsOptional()
   @IsString()

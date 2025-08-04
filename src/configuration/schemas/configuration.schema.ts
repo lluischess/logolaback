@@ -104,7 +104,8 @@ function validateGeneralSettings(datos: any) {
 }
 
 function validateBannerConfig(datos: any) {
-  const required = ['titulo', 'imagen', 'ordenBanner'];
+  // Solo validar campos realmente obligatorios
+  const required = ['titulo', 'ordenBanner'];
   for (const field of required) {
     if (datos[field] === undefined || datos[field] === null) {
       throw new Error(`Campo requerido faltante en Banner: ${field}`);
@@ -113,6 +114,27 @@ function validateBannerConfig(datos: any) {
   
   if (typeof datos.ordenBanner !== 'number' || datos.ordenBanner < 1) {
     throw new Error('El orden del banner debe ser un número mayor a 0');
+  }
+  
+  // Validaciones opcionales para campos que pueden estar presentes
+  if (datos.imagenDesktop !== undefined && typeof datos.imagenDesktop !== 'string') {
+    throw new Error('El campo imagenDesktop debe ser una cadena de texto');
+  }
+  
+  if (datos.enlaceButton !== undefined && typeof datos.enlaceButton !== 'string') {
+    throw new Error('El campo enlaceButton debe ser una cadena de texto');
+  }
+  
+  if (datos.nombreButton !== undefined && typeof datos.nombreButton !== 'string') {
+    throw new Error('El campo nombreButton debe ser una cadena de texto');
+  }
+  
+  if (datos.colorBoton !== undefined && typeof datos.colorBoton !== 'string') {
+    throw new Error('El campo colorBoton debe ser una cadena de texto');
+  }
+  
+  if (datos.colorTitulos !== undefined && typeof datos.colorTitulos !== 'string') {
+    throw new Error('El campo colorTitulos debe ser una cadena de texto');
   }
 }
 
