@@ -470,6 +470,100 @@ export class ConfigurationService {
     console.log(`[ConfigurationService] Configuración eliminada: ${id}`);
   }
 
+  // ==================== CONFIGURACIÓN PÚBLICA CONSOLIDADA ====================
+  async getPublicConfiguration(): Promise<any> {
+    try {
+      // Obtener todas las configuraciones activas
+      const [seoConfig, footerConfig, generalConfig, banners] = await Promise.all([
+        this.configurationModel.findOne({ tipo: ConfigurationType.SEO, activo: true }),
+        this.configurationModel.findOne({ tipo: ConfigurationType.FOOTER, activo: true }),
+        this.configurationModel.findOne({ tipo: ConfigurationType.GENERAL, activo: true }),
+        this.getBanners(true) // Solo banners activos
+      ]);
+
+      // DEBUG: Logging detallado de configuraciones
+      console.log('[ConfigurationService] === DEBUG CONFIGURACIÓN PÚBLICA ===');
+      console.log('[ConfigurationService] seoConfig encontrado:', !!seoConfig);
+      console.log('[ConfigurationService] seoConfig completo:', JSON.stringify(seoConfig, null, 2));
+      console.log('[ConfigurationService] seoConfig.datos:', seoConfig?.datos);
+      console.log('[ConfigurationService] footerConfig encontrado:', !!footerConfig);
+      console.log('[ConfigurationService] generalConfig encontrado:', !!generalConfig);
+      console.log('[ConfigurationService] banners encontrados:', banners?.length || 0);
+
+      // Consolidar en el formato esperado por el frontend
+      const publicConfig = {
+        seo: {
+          homeTitle: seoConfig?.datos?.tituloPaginaPrincipal || '',
+          homeDescription: seoConfig?.datos?.metaDescripcionPrincipal || '',
+          homeKeywords: seoConfig?.datos?.palabrasClave || '',
+          siteName: seoConfig?.datos?.nombreSitio || 'Logolate',
+          defaultImage: seoConfig?.datos?.imagenPorDefecto || ''
+        },
+        footer: {
+          contactoTelefono: footerConfig?.datos?.contactoTelefono || '',
+          contactoEmail: footerConfig?.datos?.contactoEmail || '',
+          contactoDireccion: footerConfig?.datos?.contactoDireccion || '',
+          horarioAtencion: footerConfig?.datos?.horarioAtencion || '',
+          queEsLogolate: footerConfig?.datos?.queEsLogolate || '',
+          redesSociales: {
+            instagram: footerConfig?.datos?.redesSociales?.instagram || ''
+          }
+        },
+        general: {
+          logoHeader: generalConfig?.datos?.logoHeader || '',
+          logoFooter: generalConfig?.datos?.logoFooter || '',
+          favicon: generalConfig?.datos?.favicon || ''
+        },
+        banner: {
+          banners: banners.map((banner: any) => ({
+            id: banner._id?.toString() || banner.id,
+            titulo: banner.datos?.titulo || '',
+            subtitulo: banner.datos?.subtitulo || '',
+            imagen: banner.datos?.imagen || '',
+            imagenMobile: banner.datos?.imagenMobile || '',
+            enlace: banner.datos?.enlace || '',
+            activo: banner.datos?.activo || false,
+            orden: banner.datos?.orden || 0,
+            nombreBoton: banner.datos?.nombreBoton || '',
+            colorBoton: banner.datos?.colorBoton || '',
+            colorTitulos: banner.datos?.colorTitulos || ''
+          }))
+        }
+      };
+
+      console.log('[ConfigurationService] Configuración pública consolidada generada');
+      return publicConfig;
+    } catch (error) {
+      console.error('[ConfigurationService] Error obteniendo configuración pública:', error);
+      // Devolver configuración por defecto en caso de error
+      return {
+        seo: {
+          homeTitle: 'Logolate - Chocolates y Caramelos Artesanales',
+          homeDescription: 'Descubre los mejores chocolates y caramelos artesanales. Productos únicos y de calidad premium.',
+          homeKeywords: 'chocolates, caramelos, artesanales, premium, dulces, logolate',
+          siteName: 'Logolate',
+          defaultImage: ''
+        },
+        footer: {
+          contactoTelefono: '',
+          contactoEmail: '',
+          contactoDireccion: '',
+          horarioAtencion: '',
+          queEsLogolate: '',
+          redesSociales: { instagram: '' }
+        },
+        general: {
+          logoHeader: '',
+          logoFooter: '',
+          favicon: ''
+        },
+        banner: {
+          banners: []
+        }
+      };
+    }
+  }
+
   // ==================== ESTADÍSTICAS ====================
   async getStats(): Promise<any> {
     const stats = await this.configurationModel.aggregate([

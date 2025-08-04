@@ -66,6 +66,12 @@ export class ConfigurationController {
     return this.configurationService.getBanners(true);
   }
 
+  @Get('public')
+  @HttpCode(HttpStatus.OK)
+  getPublicConfiguration() {
+    return this.configurationService.getPublicConfiguration();
+  }
+
   // ==================== ENDPOINTS PROTEGIDOS ====================
 
   @UseGuards(AuthGuard)
