@@ -52,7 +52,7 @@ export class Product {
   @Prop({ trim: true, maxlength: 1000 })
   masDetalles: string;
 
-  @Prop({ required: true, min: 1, max: 10000 })
+  @Prop({ required: true, min: 1, max: 1000000 })
   cantidadMinima: number;
 
   @Prop({ min: 0 })

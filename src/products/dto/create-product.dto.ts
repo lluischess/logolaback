@@ -57,7 +57,7 @@ export class CreateProductDto {
 
   @IsNumber()
   @Min(1)
-  @Max(10000)
+  @Max(1000000)
   cantidadMinima: number;
 
   @IsNumber()
