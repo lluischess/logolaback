@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, MaxLength, IsOptional } from 'class-validator';
+import { IsString, IsNotEmpty, MaxLength, IsOptional, IsEmail } from 'class-validator';
 
 export class CreateGeneralConfigDto {
   @IsString()
@@ -15,4 +15,9 @@ export class CreateGeneralConfigDto {
   @IsString()
   @MaxLength(255, { message: 'La URL del favicon no puede exceder 255 caracteres' })
   favicon?: string;
+
+  @IsOptional()
+  @IsEmail({}, { message: 'El email de administración debe tener un formato válido' })
+  @MaxLength(255, { message: 'El email de administración no puede exceder 255 caracteres' })
+  emailAdministracion?: string;
 }

@@ -101,6 +101,15 @@ function validateGeneralSettings(datos: any) {
       throw new Error(`Campo requerido faltante en General: ${field}`);
     }
   }
+  
+  // Validar email de administración si está presente
+  if (datos.emailAdministracion && typeof datos.emailAdministracion !== 'string') {
+    throw new Error('El campo emailAdministracion debe ser una cadena de texto');
+  }
+  
+  if (datos.emailAdministracion && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(datos.emailAdministracion)) {
+    throw new Error('El campo emailAdministracion debe tener un formato de email válido');
+  }
 }
 
 function validateBannerConfig(datos: any) {
@@ -135,6 +144,19 @@ function validateBannerConfig(datos: any) {
   
   if (datos.colorTitulos !== undefined && typeof datos.colorTitulos !== 'string') {
     throw new Error('El campo colorTitulos debe ser una cadena de texto');
+  }
+  
+  // Validaciones para segundo botón opcional
+  if (datos.enlaceButton2 !== undefined && typeof datos.enlaceButton2 !== 'string') {
+    throw new Error('El campo enlaceButton2 debe ser una cadena de texto');
+  }
+  
+  if (datos.nombreButton2 !== undefined && typeof datos.nombreButton2 !== 'string') {
+    throw new Error('El campo nombreButton2 debe ser una cadena de texto');
+  }
+  
+  if (datos.colorBoton2 !== undefined && typeof datos.colorBoton2 !== 'string') {
+    throw new Error('El campo colorBoton2 debe ser una cadena de texto');
   }
 }
 

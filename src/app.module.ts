@@ -6,6 +6,7 @@ import { ProductsModule } from './products/products.module';
 import { CategoriesModule } from './categories/categories.module';
 import { BudgetsModule } from './budgets/budgets.module';
 import { ConfigurationModule } from './configuration/configuration.module';
+import { EmailModule } from './email/email.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { ConfigurationModule } from './configuration/configuration.module';
     CategoriesModule,
     BudgetsModule,
     ConfigurationModule,
+    EmailModule,
   ],
   controllers: [],
   providers: [],

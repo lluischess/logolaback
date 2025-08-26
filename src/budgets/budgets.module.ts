@@ -5,6 +5,8 @@ import { BudgetsService } from './budgets.service';
 import { Budget, BudgetSchema } from './schemas/budget.schema';
 import { Product, ProductSchema } from '../products/schemas/product.schema';
 import { AuthModule } from '../auth/auth.module';
+import { EmailModule } from '../email/email.module';
+import { ConfigurationModule } from '../configuration/configuration.module';
 
 @Module({
   imports: [
@@ -12,7 +14,9 @@ import { AuthModule } from '../auth/auth.module';
       { name: Budget.name, schema: BudgetSchema },
       { name: Product.name, schema: ProductSchema }
     ]),
-    AuthModule
+    AuthModule,
+    EmailModule,
+    ConfigurationModule
   ],
   controllers: [BudgetsController],
   providers: [BudgetsService],

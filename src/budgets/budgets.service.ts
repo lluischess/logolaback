@@ -6,6 +6,8 @@ import { CreateBudgetDto, UpdateBudgetDto, QueryBudgetDto } from './dto';
 import { BudgetStatus } from './interfaces/budget.interface';
 // Importar modelo de productos para hacer JOIN
 import { Product, ProductDocument } from '../products/schemas/product.schema';
+import { EmailService } from '../email/email.service';
+import { ConfigurationService } from '../configuration/configuration.service';
 
 @Injectable()
 export class BudgetsService {
@@ -14,6 +16,8 @@ export class BudgetsService {
   constructor(
     @InjectModel(Budget.name) private budgetModel: Model<BudgetDocument>,
     @InjectModel(Product.name) private productModel: Model<ProductDocument>,
+    private emailService: EmailService,
+    private configurationService: ConfigurationService,
   ) {}
 
   async create(createBudgetDto: CreateBudgetDto): Promise<Budget> {
@@ -221,108 +225,16 @@ export class BudgetsService {
       .exec();
   }
 
-  // Sistema de mailing automático
-  private async sendAutomaticEmails(budget: Budget): Promise<void> {
-    try {
-      // 1. Enviar email automático al cliente
-      await this.sendClientNotificationEmail(budget);
-      
-      // 2. Enviar notificación a administradores
-      await this.sendAdminNotificationEmail(budget);
-    } catch (error) {
-      this.logger.error(`Error enviando emails automáticos: ${error.message}`);
-    }
-  }
-
-  private async sendClientNotificationEmail(budget: Budget): Promise<void> {
-    try {
-      // Aquí implementarías la lógica de envío de email al cliente
-      // Por ejemplo, usando un servicio de email como Nodemailer, SendGrid, etc.
-      
-      this.logger.log(`Enviando email al cliente: ${budget.cliente.email}`);
-      
-      // Simular envío exitoso y actualizar estado
-      await this.budgetModel.findByIdAndUpdate((budget as any)._id, {
-        'notificacionesEmail.cliente.enviado': true,
-        'notificacionesEmail.cliente.fechaEnvio': new Date()
-      });
-      
-      this.logger.log(`Email enviado exitosamente al cliente: ${budget.cliente.email}`);
-    } catch (error) {
-      this.logger.error(`Error enviando email al cliente: ${error.message}`);
-      
-      // Actualizar estado de error
-      await this.budgetModel.findByIdAndUpdate((budget as any)._id, {
-        'notificacionesEmail.cliente.error': error.message
-      });
-    }
-  }
-
-  private async sendAdminNotificationEmail(budget: Budget): Promise<void> {
-    try {
-      // Aquí implementarías la lógica de envío de email a administradores
-      // Podrías tener una lista de emails de administradores en configuración
-      
-      this.logger.log(`Enviando notificación a administradores para presupuesto: ${budget.numeroPedido}`);
-      
-      // Simular envío exitoso y actualizar estado
-      await this.budgetModel.findByIdAndUpdate((budget as any)._id, {
-        'notificacionesEmail.admin.enviado': true,
-        'notificacionesEmail.admin.fechaEnvio': new Date()
-      });
-      
-      this.logger.log(`Notificación enviada exitosamente a administradores`);
-    } catch (error) {
-      this.logger.error(`Error enviando notificación a administradores: ${error.message}`);
-      
-      // Actualizar estado de error
-      await this.budgetModel.findByIdAndUpdate((budget as any)._id, {
-        'notificacionesEmail.admin.error': error.message
-      });
-    }
-  }
-
-  private async sendStatusChangeEmail(budget: Budget, newStatus: BudgetStatus): Promise<void> {
-    try {
-      // Enviar email al cliente cuando cambia el estado del presupuesto
-      this.logger.log(`Enviando notificación de cambio de estado a: ${budget.cliente.email}`);
-      
-      // Aquí implementarías la lógica específica según el estado
-      const emailTemplates = {
-        [BudgetStatus.EN_PROCESO]: 'Su presupuesto está siendo procesado',
-        [BudgetStatus.ENVIADO]: 'Su presupuesto ha sido enviado',
-        [BudgetStatus.APROBADO]: 'Su presupuesto ha sido aprobado',
-        [BudgetStatus.COMPLETADO]: 'Su pedido ha sido completado'
-      };
-      
-      const message = emailTemplates[newStatus];
-      if (message) {
-        this.logger.log(`Mensaje: ${message}`);
-        // Aquí enviarías el email real
-      }
-    } catch (error) {
-      this.logger.error(`Error enviando email de cambio de estado: ${error.message}`);
-    }
-  }
-
-  // Método para reenviar emails fallidos
+  // Método para reenviar emails fallidos (usando EmailService)
   async resendFailedEmails(): Promise<{ message: string, processed: number }> {
     const failedBudgets = await this.budgetModel.find({
-      $or: [
-        { 'notificacionesEmail.cliente.enviado': false, 'notificacionesEmail.cliente.error': { $exists: true } },
-        { 'notificacionesEmail.admin.enviado': false, 'notificacionesEmail.admin.error': { $exists: true } }
-      ]
+      estado: 'pendiente'
     });
 
     let processed = 0;
     for (const budget of failedBudgets) {
       try {
-        if (!budget.notificacionesEmail.cliente.enviado) {
-          await this.sendClientNotificationEmail(budget);
-        }
-        if (!budget.notificacionesEmail.admin.enviado) {
-          await this.sendAdminNotificationEmail(budget);
-        }
+        await this.sendAutomaticEmails(budget);
         processed++;
       } catch (error) {
         this.logger.error(`Error reenviando emails para presupuesto ${budget.numeroPedido}: ${error.message}`);
@@ -438,5 +350,85 @@ export class BudgetsService {
     }
     
     return this.enrichBudgetWithProducts(budget);
+  }
+
+  /**
+   * Enviar emails automáticos cuando se crea un presupuesto
+   */
+  private async sendAutomaticEmails(budget: Budget): Promise<void> {
+    try {
+      // Solo enviar emails si el estado es 'pendiente'
+      if (budget.estado !== 'pendiente') {
+        this.logger.log(`📧 No se envían emails - Estado: ${budget.estado}`);
+        return;
+      }
+
+      this.logger.log(`📧 === ENVIANDO EMAILS AUTOMÁTICOS PARA PRESUPUESTO #${budget.numeroPresupuesto} ===`);
+
+      // Obtener email de administración desde configuración
+      const generalConfig = await this.configurationService.getGeneralConfig();
+      const emailAdministracion = generalConfig?.datos?.emailAdministracion || 'admin@logolate.com';
+
+      this.logger.log(`📧 Email de administración: ${emailAdministracion}`);
+
+      // Preparar datos para el servicio de email
+      const budgetDoc = budget as any; // Cast para acceder a propiedades de Mongoose
+      const emailData = {
+        presupuesto: {
+          id: budgetDoc._id.toString(),
+          numeroPresupuesto: budget.numeroPresupuesto.toString(),
+          fechaCreacion: budgetDoc.createdAt || budgetDoc.fechaCreacion,
+          estado: budget.estado,
+          total: budget.precioTotal || 0,
+          cliente: {
+            nombre: budget.cliente.nombre,
+            email: budget.cliente.email,
+            telefono: budget.cliente.telefono,
+            empresa: budget.cliente.empresa
+          },
+          productos: await Promise.all(budget.productos.map(async (p) => {
+            // Buscar el producto real para obtener la referencia
+            try {
+              const product = await this.productModel.findById(p.productId);
+              return {
+                nombre: product?.referencia || p.productId, // Usar referencia del producto
+                cantidad: p.cantidad,
+                precio: p.precioUnitario || 0,
+                subtotal: p.cantidad * (p.precioUnitario || 0)
+              };
+            } catch (error) {
+              return {
+                nombre: p.productId, // Fallback al ID si no se encuentra
+                cantidad: p.cantidad,
+                precio: p.precioUnitario || 0,
+                subtotal: p.cantidad * (p.precioUnitario || 0)
+              };
+            }
+          }))
+        },
+        emailAdministracion: emailAdministracion
+      };
+
+      // Enviar emails usando el servicio de email
+      const results = await this.emailService.sendNewPresupuestoEmails(emailData);
+      
+      this.logger.log(`✅ Emails enviados exitosamente:`, results);
+
+    } catch (error) {
+      this.logger.error(`❌ Error enviando emails automáticos:`, error);
+      // No lanzar error para no afectar la creación del presupuesto
+    }
+  }
+
+  /**
+   * Enviar email de cambio de estado (opcional)
+   */
+  private async sendStatusChangeEmail(budget: Budget, newStatus: string): Promise<void> {
+    try {
+      // Implementar lógica de notificación de cambio de estado si es necesario
+      this.logger.log(`📧 Cambio de estado de ${budget.estado} a ${newStatus} para presupuesto #${budget.numeroPresupuesto}`);
+    } catch (error) {
+      this.logger.error(`❌ Error enviando email de cambio de estado:`, error);
+    }
   }
 }

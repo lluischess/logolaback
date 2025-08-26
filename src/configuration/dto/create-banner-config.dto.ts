@@ -48,4 +48,20 @@ export class CreateBannerConfigDto {
   @IsOptional()
   @IsBoolean()
   activo?: boolean;
+
+  // Segundo botón opcional
+  @IsOptional()
+  @IsString()
+  @MaxLength(255, { message: 'El enlace del segundo botón no puede exceder 255 caracteres' })
+  enlaceButton2?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(50, { message: 'El nombre del segundo botón no puede exceder 50 caracteres' })
+  nombreButton2?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(7, { message: 'El color del segundo botón debe ser un código hexadecimal válido' })
+  colorBoton2?: string;
 }

@@ -188,7 +188,11 @@ export class ConfigurationService {
               ordenBanner: bannerData.ordenBanner || bannerData.orden || (i + 1),
               colorBoton: bannerData.colorBoton || '#3B82F6',
               colorTitulos: bannerData.colorTitulos || '#FFFFFF',
-              activo: bannerData.activo !== undefined ? bannerData.activo : true
+              activo: bannerData.activo !== undefined ? bannerData.activo : true,
+              // Segundo botón opcional
+              enlaceButton2: bannerData.enlaceButton2 || '',
+              nombreButton2: bannerData.nombreButton2 || '',
+              colorBoton2: bannerData.colorBoton2 || ''
             },
             activo: true
           };
@@ -198,7 +202,11 @@ export class ConfigurationService {
             nombreButton: bannerConfig.datos.nombreButton,
             colorBoton: bannerConfig.datos.colorBoton,
             colorTitulos: bannerConfig.datos.colorTitulos,
-            imagenDesktop: bannerConfig.datos.imagenDesktop
+            imagenDesktop: bannerConfig.datos.imagenDesktop,
+            // Segundo botón
+            enlaceButton2: bannerConfig.datos.enlaceButton2,
+            nombreButton2: bannerConfig.datos.nombreButton2,
+            colorBoton2: bannerConfig.datos.colorBoton2
           });
           
           console.log(`[ConfigurationService] Objeto a guardar:`, JSON.stringify(bannerConfig, null, 2));

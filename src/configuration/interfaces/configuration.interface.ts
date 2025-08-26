@@ -25,6 +25,7 @@ export interface GeneralSettings {
   logoHeader: string;
   logoFooter: string;
   favicon: string;
+  emailAdministracion?: string;
 }
 
 // Configuración de Banner
@@ -39,6 +40,10 @@ export interface BannerConfig {
   colorBoton: string;
   colorTitulos: string;
   activo: boolean;
+  // Segundo botón opcional
+  enlaceButton2?: string;
+  nombreButton2?: string;
+  colorBoton2?: string;
 }
 
 // Configuración de Imagen subida
