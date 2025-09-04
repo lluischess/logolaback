@@ -12,8 +12,12 @@ async function bootstrap() {
   app.use(require('express').urlencoded({ limit: '50mb', extended: true }));
 
   // Configurar CORS para permitir conexiones desde Angular
+  const allowedOrigins = process.env.NODE_ENV === 'production' 
+    ? [process.env.FRONTEND_URL, 'https://new.logolate.com', 'https://logolate.com']
+    : ['http://localhost:4200', 'http://127.0.0.1:4200', 'http://localhost:4201', 'http://127.0.0.1:4201', 'http://localhost:4202', 'http://127.0.0.1:4202'];
+
   app.enableCors({
-    origin: ['http://localhost:4200', 'http://127.0.0.1:4200', 'http://localhost:4201', 'http://127.0.0.1:4201', 'http://localhost:4202', 'http://127.0.0.1:4202'],
+    origin: allowedOrigins.filter(Boolean), // Filtra valores undefined/null
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true,
