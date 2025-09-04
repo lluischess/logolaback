@@ -66,6 +66,10 @@ export class Budget {
   @Prop({ default: false })
   aceptaCorreosPublicitarios: boolean;
 
+  // Observaciones del cliente
+  @Prop({ required: false, maxlength: 600 })
+  observaciones?: string;
+
   // Notas adicionales
   @Prop({ required: false, maxlength: 1000 })
   notas?: string;

@@ -386,6 +386,7 @@ export class BudgetsService {
             telefono: budget.cliente.telefono,
             empresa: budget.cliente.empresa
           },
+          observaciones: budget.observaciones || '',
           productos: await Promise.all(budget.productos.map(async (p) => {
             // Buscar el producto real para obtener la referencia
             try {

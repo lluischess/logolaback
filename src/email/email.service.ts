@@ -22,6 +22,7 @@ export interface PresupuestoEmailData {
       telefono?: string;
       empresa?: string;
     };
+    observaciones?: string;
     productos: Array<{
       nombre: string;
       cantidad: number;
@@ -176,6 +177,13 @@ export class EmailService {
             ${presupuesto.cliente.empresa ? `<p style="margin: 5px 0;"><strong>🏢 Empresa:</strong> ${presupuesto.cliente.empresa}</p>` : ''}
             <p style="margin: 5px 0;"><strong>📅 Fecha:</strong> ${new Date(presupuesto.fechaCreacion).toLocaleDateString('es-ES')}</p>
           </div>
+
+          ${presupuesto.observaciones ? `
+          <h2 style="color: #8B4513;">💬 Observaciones del Cliente</h2>
+          <div style="background: #fff3cd; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #ffc107;">
+            <p style="margin: 0; font-style: italic;">"${presupuesto.observaciones}"</p>
+          </div>
+          ` : ''}
 
           <h2 style="color: #8B4513;">🛍️ Productos Solicitados</h2>
           <table style="width: 100%; border-collapse: collapse; margin-bottom: 25px; background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">

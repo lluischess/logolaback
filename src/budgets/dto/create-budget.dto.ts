@@ -83,6 +83,11 @@ export class CreateBudgetDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(600, { message: 'Las observaciones no pueden exceder 600 caracteres' })
+  observaciones?: string;
+
+  @IsOptional()
+  @IsString()
   @MaxLength(1000, { message: 'Las notas no pueden exceder 1000 caracteres' })
   notas?: string;
 
