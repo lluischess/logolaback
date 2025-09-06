@@ -7,6 +7,7 @@ import { CategoriesModule } from './categories/categories.module';
 import { BudgetsModule } from './budgets/budgets.module';
 import { ConfigurationModule } from './configuration/configuration.module';
 import { EmailModule } from './email/email.module';
+import { SitemapModule } from './sitemap/sitemap.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { EmailModule } from './email/email.module';
     BudgetsModule,
     ConfigurationModule,
     EmailModule,
+    SitemapModule,
   ],
   controllers: [],
   providers: [],
