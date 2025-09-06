@@ -9,7 +9,7 @@ export class UploadController {
   @Post('image')
   @UseInterceptors(FileInterceptor('image'))
   async uploadImage(
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFile() file: any,
     @Body('folder') folder?: string
   ) {
     try {
@@ -32,7 +32,7 @@ export class UploadController {
   @Post('configuration')
   @UseInterceptors(FileInterceptor('image'))
   async uploadConfigurationImage(
-    @UploadedFile() file: Express.Multer.File
+    @UploadedFile() file: any
   ) {
     try {
       const imageUrl = await this.hostingerService.uploadImage(file, 'configuration');

@@ -8,7 +8,7 @@ import * as fs from 'fs';
 export class HostingerService {
   constructor(private configService: ConfigService) {}
 
-  async uploadImage(file: Express.Multer.File, folder: string = 'products'): Promise<string> {
+  async uploadImage(file: any, folder: string = 'products'): Promise<string> {
     const client = new ftp.Client();
     
     try {
