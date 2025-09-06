@@ -11,7 +11,10 @@ import { EmailModule } from './email/email.module';
 @Module({
   imports: [
     AuthModule,
-    ConfigModule.forRoot({ isGlobal: true }),
+    ConfigModule.forRoot({ 
+      isGlobal: true,
+      envFilePath: process.env.NODE_ENV === 'production' ? '.env.production' : '.env.development'
+    }),
     MongooseModule.forRoot(process.env.MONGO_URI),
     ProductsModule,
     CategoriesModule,
