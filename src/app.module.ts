@@ -8,6 +8,7 @@ import { BudgetsModule } from './budgets/budgets.module';
 import { ConfigurationModule } from './configuration/configuration.module';
 import { EmailModule } from './email/email.module';
 import { SitemapModule } from './sitemap/sitemap.module';
+import { UploadModule } from './upload/upload.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { SitemapModule } from './sitemap/sitemap.module';
     ConfigurationModule,
     EmailModule,
     SitemapModule,
+    UploadModule,
   ],
   controllers: [],
   providers: [],
