@@ -9,7 +9,8 @@ import {
   MaxLength, 
   Min, 
   Max, 
-  ArrayMaxSize 
+  ArrayMaxSize,
+  IsUrl 
 } from 'class-validator';
 
 export class CreateProductDto {
@@ -42,7 +43,6 @@ export class CreateProductDto {
   @IsArray()
   @IsOptional()
   @ArrayMaxSize(3)
-  @IsString({ each: true })
   imagenes?: string[];
 
   @IsString()
@@ -109,7 +109,7 @@ export class CreateProductDto {
   @MaxLength(160)
   ogDescripcion?: string;
 
-  @IsString()
   @IsOptional()
+  @IsString()
   ogImagen?: string;
 }
