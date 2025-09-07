@@ -34,11 +34,11 @@ export class HostingerService {
       const timestamp = Date.now();
       const extension = path.extname(file.originalname);
       const filename = `${folder}_${timestamp}${extension}`;
-      const remotePath = `/home/u317949253/domains/logolate.com/public_html/uploads/${folder}/${filename}`;
+      const remotePath = `uploads/${folder}/${filename}`;
 
       // Crear directorio si no existe
       try {
-        await client.ensureDir(`/home/u317949253/domains/logolate.com/public_html/uploads/${folder}`);
+        await client.ensureDir(`uploads/${folder}`);
       } catch (error) {
         // El directorio ya existe
       }
@@ -84,7 +84,7 @@ export class HostingerService {
 
       // Extraer path del archivo desde la URL
       const urlPath = new URL(imageUrl).pathname;
-      const remotePath = `/public_html${urlPath}`;
+      const remotePath = urlPath.replace('/uploads/', 'uploads/');
 
       await client.remove(remotePath);
 
