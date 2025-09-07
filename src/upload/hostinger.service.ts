@@ -34,16 +34,13 @@ export class HostingerService {
       const timestamp = Date.now();
       const extension = path.extname(file.originalname);
       const filename = `${folder}_${timestamp}${extension}`;
-      const remotePath = `uploads/${folder}/${filename}`;
+      const remotePath = `/${folder}/${filename}`;
 
       // Crear directorio si no existe
       try {
-        // Navegar al directorio raíz primero
-        await client.cd('/');
-        await client.ensureDir(`uploads`);
-        await client.ensureDir(`uploads/${folder}`);
+        await client.ensureDir(`/${folder}`);
       } catch (error) {
-        console.log('Directory creation error (might already exist):', error.message);
+        // El directorio ya existe
       }
 
       // Subir archivo
