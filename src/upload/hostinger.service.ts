@@ -38,9 +38,12 @@ export class HostingerService {
 
       // Crear directorio si no existe
       try {
+        // Navegar al directorio raíz primero
+        await client.cd('/');
+        await client.ensureDir(`uploads`);
         await client.ensureDir(`uploads/${folder}`);
       } catch (error) {
-        // El directorio ya existe
+        console.log('Directory creation error (might already exist):', error.message);
       }
 
       // Subir archivo
