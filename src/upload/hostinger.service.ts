@@ -13,10 +13,20 @@ export class HostingerService {
     
     try {
       // Conectar a Hostinger FTP
+      const ftpHost = this.configService.get('FTP_HOST') || 'ftp.logolate.com';
+      const ftpUser = this.configService.get('FTP_USER') || 'u317949253.render';
+      const ftpPassword = this.configService.get('FTP_PASSWORD');
+      
+      console.log('🔗 Conectando FTP:', { host: ftpHost, user: ftpUser });
+      
+      if (!ftpPassword) {
+        throw new Error('FTP_PASSWORD no configurada en variables de entorno');
+      }
+      
       await client.access({
-        host: this.configService.get('FTP_HOST'), // ftp.logolate.com
-        user: this.configService.get('FTP_USER'), // u317949253.render
-        password: this.configService.get('FTP_PASSWORD'),
+        host: ftpHost,
+        user: ftpUser,
+        password: ftpPassword,
         secure: false
       });
 
