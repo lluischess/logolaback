@@ -32,7 +32,8 @@ export class CreateProductDto {
   @IsEnum(['grande', 'mediano', 'pequeño'])
   talla: string;
 
-  @IsEnum(['chocolates', 'caramelos', 'novedades', 'navidad', 'galletas', 'hoteles', 'bombones', 'minibar'])
+  @IsString()
+  @IsNotEmpty()
   categoria: string;
 
   @IsString()
