@@ -27,20 +27,7 @@ export class Product {
   @Prop({ 
     required: true,
     trim: true,
-    index: true,
-    validate: {
-      validator: async function(categoria: string) {
-        // Validar que la categoría existe en la base de datos
-        const mongoose = require('mongoose');
-        const Category = mongoose.model('Category');
-        const categoryExists = await Category.findOne({ 
-          nombre: { $regex: new RegExp(`^${categoria}$`, 'i') },
-          publicado: true 
-        });
-        return !!categoryExists;
-      },
-      message: 'La categoría especificada no existe o no está publicada'
-    }
+    index: true
   })
   categoria: string;
 

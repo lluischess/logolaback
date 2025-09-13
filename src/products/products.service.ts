@@ -325,6 +325,24 @@ export class ProductsService {
         throw new NotFoundException(`Producto con ID ${id} no encontrado`);
       }
 
+      // Validar que la categoría existe (si tenemos acceso al modelo Category)
+      try {
+        const mongoose = require('mongoose');
+        if (mongoose.models.Category) {
+          const Category = mongoose.models.Category;
+          const categoryExists = await Category.findOne({ 
+            nombre: { $regex: new RegExp(`^${originalProduct.categoria}$`, 'i') },
+            publicado: true 
+          });
+          if (!categoryExists) {
+            throw new BadRequestException(`La categoría '${originalProduct.categoria}' no existe o no está publicada`);
+          }
+        }
+      } catch (categoryError) {
+        console.warn('No se pudo validar la categoría:', categoryError.message);
+        // Continuar sin validación de categoría
+      }
+
       // Generar nueva referencia única
       let newReferencia = `${originalProduct.referencia}-COPY`;
       let counter = 1;
@@ -338,19 +356,30 @@ export class ProductsService {
       // Obtener el siguiente orden para la categoría
       const nextOrder = await this.getNextOrderForCategory(originalProduct.categoria);
 
-      // Crear el producto duplicado
+      // Crear el producto duplicado sin usar spread operator que puede causar problemas
       const duplicatedProductData = {
-        ...originalProduct.toObject(),
-        _id: undefined, // Eliminar el ID para que MongoDB genere uno nuevo
         numeroProducto: undefined, // Se generará automáticamente
-        referencia: newReferencia,
         nombre: `${originalProduct.nombre} - Copia`,
+        referencia: newReferencia,
+        descripcion: originalProduct.descripcion,
+        talla: originalProduct.talla,
+        categoria: originalProduct.categoria,
+        medidas: originalProduct.medidas,
+        imagenes: [...(originalProduct.imagenes || [])],
+        ingredientes: originalProduct.ingredientes,
+        masDetalles: originalProduct.masDetalles,
+        cantidadMinima: originalProduct.cantidadMinima,
+        precio: originalProduct.precio,
         ordenCategoria: nextOrder,
         publicado: false, // Despublicado por defecto
+        consumePreferente: originalProduct.consumePreferente,
+        metaTitulo: originalProduct.metaTitulo,
+        metaDescripcion: originalProduct.metaDescripcion,
+        palabrasClave: originalProduct.palabrasClave,
         urlSlug: undefined, // Se generará automáticamente
-        createdAt: undefined,
-        updatedAt: undefined,
-        __v: undefined
+        ogTitulo: originalProduct.ogTitulo,
+        ogDescripcion: originalProduct.ogDescripcion,
+        ogImagen: originalProduct.ogImagen
       };
 
       const duplicatedProduct = new this.productModel(duplicatedProductData);
