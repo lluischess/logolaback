@@ -82,8 +82,16 @@ export class ProductsController {
 
   @Patch(':id/order')
   @UseGuards(AuthGuard)
-  async updateProductOrder(@Param('id') id: string, @Body() updateOrderDto: { orden: number }) {
-    return await this.productsService.updateProductOrder(id, updateOrderDto.orden);
+  async updateProductOrder(
+    @Param('id') id: string,
+    @Body('newOrder') newOrder: number
+  ) {
+    return await this.productsService.updateProductOrder(id, newOrder);
+  }
+
+  @Post(':id/duplicate')
+  async duplicateProduct(@Param('id') id: string) {
+    return await this.productsService.duplicateProduct(id);
   }
 
   /**

@@ -315,6 +315,59 @@ export class ProductsService {
   }
 
   /**
+   * Duplicar un producto existente
+   */
+  async duplicateProduct(id: string): Promise<Product> {
+    try {
+      // Buscar el producto original
+      const originalProduct = await this.productModel.findById(id).exec();
+      if (!originalProduct) {
+        throw new NotFoundException(`Producto con ID ${id} no encontrado`);
+      }
+
+      // Generar nueva referencia única
+      let newReferencia = `${originalProduct.referencia}-COPY`;
+      let counter = 1;
+      
+      // Verificar que la nueva referencia sea única
+      while (await this.productModel.findOne({ referencia: newReferencia }).exec()) {
+        newReferencia = `${originalProduct.referencia}-COPY${counter}`;
+        counter++;
+      }
+
+      // Obtener el siguiente orden para la categoría
+      const nextOrder = await this.getNextOrderForCategory(originalProduct.categoria);
+
+      // Crear el producto duplicado
+      const duplicatedProductData = {
+        ...originalProduct.toObject(),
+        _id: undefined, // Eliminar el ID para que MongoDB genere uno nuevo
+        numeroProducto: undefined, // Se generará automáticamente
+        referencia: newReferencia,
+        nombre: `${originalProduct.nombre} - Copia`,
+        ordenCategoria: nextOrder,
+        publicado: false, // Despublicado por defecto
+        urlSlug: undefined, // Se generará automáticamente
+        createdAt: undefined,
+        updatedAt: undefined,
+        __v: undefined
+      };
+
+      const duplicatedProduct = new this.productModel(duplicatedProductData);
+      const savedProduct = await duplicatedProduct.save();
+
+      console.log(`✅ Producto duplicado: ${originalProduct.nombre} -> ${savedProduct.nombre}`);
+      console.log(`✅ Nueva referencia: ${newReferencia}`);
+      console.log(`✅ Orden asignado: ${nextOrder}`);
+
+      return savedProduct;
+    } catch (error) {
+      console.error('❌ Error duplicando producto:', error);
+      throw new BadRequestException(`Error al duplicar producto: ${error.message}`);
+    }
+  }
+
+  /**
    * Eliminar imagen de producto del servidor
    */
   async deleteProductImage(imagePath: string): Promise<{ success: boolean }> {
