@@ -120,9 +120,25 @@ export class ProductsService {
     return product;
   }
 
-  async findByCategory(categoria: string): Promise<Product[]> {
+  async findByCategory(categoriaSlugOrName: string): Promise<Product[]> {
+    // Primero intentar buscar la categoría por slug
+    const mongoose = require('mongoose');
+    const Category = mongoose.model('Category');
+    
+    const category = await Category.findOne({
+      $or: [
+        { urlSlug: categoriaSlugOrName },
+        { nombre: { $regex: new RegExp(`^${categoriaSlugOrName}$`, 'i') } }
+      ],
+      publicado: true
+    });
+
+    if (!category) {
+      return [];
+    }
+
     return await this.productModel
-      .find({ categoria, publicado: true })
+      .find({ categoria: category.nombre, publicado: true })
       .sort({ ordenCategoria: 1 })
       .exec();
   }
