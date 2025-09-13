@@ -121,26 +121,51 @@ export class ProductsService {
   }
 
   async findByCategory(categoriaSlugOrName: string): Promise<Product[]> {
-    // Primero intentar buscar la categoría por slug
-    const mongoose = require('mongoose');
-    const Category = mongoose.model('Category');
-    
-    const category = await Category.findOne({
-      $or: [
-        { urlSlug: categoriaSlugOrName },
-        { nombre: { $regex: new RegExp(`^${categoriaSlugOrName}$`, 'i') } }
-      ],
-      publicado: true
-    });
+    try {
+      // Primero intentar buscar la categoría por slug
+      const mongoose = require('mongoose');
+      
+      // Verificar si el modelo Category está disponible
+      let Category;
+      try {
+        Category = mongoose.model('Category');
+      } catch (error) {
+        // Si el modelo no existe, buscar directamente por nombre de categoría
+        console.log('Category model not found, searching by category name directly');
+        return await this.productModel
+          .find({ categoria: categoriaSlugOrName, publicado: true })
+          .sort({ ordenCategoria: 1 })
+          .exec();
+      }
+      
+      const category = await Category.findOne({
+        $or: [
+          { urlSlug: categoriaSlugOrName },
+          { nombre: { $regex: new RegExp(`^${categoriaSlugOrName}$`, 'i') } }
+        ],
+        publicado: true
+      });
 
-    if (!category) {
-      return [];
+      if (!category) {
+        // Si no encuentra por slug, intentar buscar directamente por nombre
+        return await this.productModel
+          .find({ categoria: categoriaSlugOrName, publicado: true })
+          .sort({ ordenCategoria: 1 })
+          .exec();
+      }
+
+      return await this.productModel
+        .find({ categoria: category.nombre, publicado: true })
+        .sort({ ordenCategoria: 1 })
+        .exec();
+    } catch (error) {
+      console.error('Error in findByCategory:', error);
+      // Fallback: buscar directamente por nombre
+      return await this.productModel
+        .find({ categoria: categoriaSlugOrName, publicado: true })
+        .sort({ ordenCategoria: 1 })
+        .exec();
     }
-
-    return await this.productModel
-      .find({ categoria: category.nombre, publicado: true })
-      .sort({ ordenCategoria: 1 })
-      .exec();
   }
 
   async searchProducts(searchTerm: string): Promise<Product[]> {
