@@ -187,17 +187,6 @@ export class ProductsService {
 
   async update(id: string, updateProductDto: UpdateProductDto): Promise<Product> {
     try {
-      // Si se actualiza la referencia, verificar que sea única
-      if (updateProductDto.referencia) {
-        const existingProduct = await this.productModel.findOne({ 
-          referencia: updateProductDto.referencia,
-          _id: { $ne: id }
-        });
-        if (existingProduct) {
-          throw new BadRequestException(`Ya existe un producto con la referencia: ${updateProductDto.referencia}`);
-        }
-      }
-
       // Obtener el producto actual para comparar la categoría
       const currentProduct = await this.productModel.findById(id).exec();
       if (!currentProduct) {
