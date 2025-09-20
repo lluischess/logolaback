@@ -11,7 +11,7 @@ export class Product {
   @Prop({ required: true, trim: true, maxlength: 100 })
   nombre: string;
 
-  @Prop({ required: true, unique: true, trim: true, maxlength: 50 })
+  @Prop({ required: true, trim: true, maxlength: 50 })
   referencia: string;
 
   @Prop({ required: true, trim: true, maxlength: 1000 })

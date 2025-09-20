@@ -12,12 +12,6 @@ export class ProductsService {
 
   async create(createProductDto: CreateProductDto): Promise<Product> {
     try {
-      // Verificar que la referencia sea única
-      const existingProduct = await this.productModel.findOne({ referencia: createProductDto.referencia });
-      if (existingProduct) {
-        throw new BadRequestException(`Ya existe un producto con la referencia: ${createProductDto.referencia}`);
-      }
-
       // Si no se especifica orden, asignar el siguiente disponible en la categoría
       if (!createProductDto.ordenCategoria) {
         const maxOrder = await this.productModel
