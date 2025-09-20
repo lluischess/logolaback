@@ -46,6 +46,7 @@ export class Product {
   })
   imagenes: string[];
 
+  
   @Prop({ required: true, trim: true, maxlength: 500 })
   ingredientes: string;
 
