@@ -116,47 +116,63 @@ export class ProductsService {
 
   async findByCategory(categoriaSlugOrName: string): Promise<Product[]> {
     try {
-      // Primero intentar buscar la categoría por slug
       const mongoose = require('mongoose');
-      
+      const escapeRegex = (str: string) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const normalizeSlugToName = (slugOrName: string) =>
+        (slugOrName || '').toString().trim().replace(/-/g, ' ').replace(/\s+/g, ' ');
+
       // Verificar si el modelo Category está disponible
-      let Category;
+      let Category: any;
       try {
         Category = mongoose.model('Category');
       } catch (error) {
-        // Si el modelo no existe, buscar directamente por nombre de categoría
-        console.log('Category model not found, searching by category name directly');
+        // Si el modelo no existe, buscar directamente por nombre normalizado (case-insensitive)
+        const normalized = normalizeSlugToName(categoriaSlugOrName);
         return await this.productModel
-          .find({ categoria: categoriaSlugOrName, publicado: true })
+          .find({
+            publicado: true,
+            categoria: { $regex: `^${escapeRegex(normalized)}$`, $options: 'i' },
+          })
           .sort({ ordenCategoria: 1 })
           .exec();
       }
-      
+
+      // Resolver la categoría por slug o por nombre (case-insensitive)
       const category = await Category.findOne({
         $or: [
           { urlSlug: categoriaSlugOrName },
-          { nombre: { $regex: new RegExp(`^${categoriaSlugOrName}$`, 'i') } }
+          { nombre: { $regex: new RegExp(`^${escapeRegex(normalizeSlugToName(categoriaSlugOrName))}$`, 'i') } },
         ],
-        publicado: true
-      });
+        publicado: true,
+      }).exec();
 
-      if (!category) {
-        // Si no encuentra por slug, intentar buscar directamente por nombre
+      if (category) {
         return await this.productModel
-          .find({ categoria: categoriaSlugOrName, publicado: true })
+          .find({
+            publicado: true,
+            categoria: { $regex: `^${escapeRegex(category.nombre)}$`, $options: 'i' },
+          })
           .sort({ ordenCategoria: 1 })
           .exec();
       }
 
+      // Fallback: buscar directamente usando nombre normalizado desde el slug
+      const normalized = normalizeSlugToName(categoriaSlugOrName);
       return await this.productModel
-        .find({ categoria: category.nombre, publicado: true })
+        .find({
+          publicado: true,
+          categoria: { $regex: `^${escapeRegex(normalized)}$`, $options: 'i' },
+        })
         .sort({ ordenCategoria: 1 })
         .exec();
     } catch (error) {
       console.error('Error in findByCategory:', error);
-      // Fallback: buscar directamente por nombre
+      const normalized = (categoriaSlugOrName || '').toString().trim().replace(/-/g, ' ').replace(/\s+/g, ' ');
       return await this.productModel
-        .find({ categoria: categoriaSlugOrName, publicado: true })
+        .find({
+          publicado: true,
+          categoria: { $regex: normalized, $options: 'i' },
+        })
         .sort({ ordenCategoria: 1 })
         .exec();
     }
