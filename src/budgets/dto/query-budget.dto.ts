@@ -12,7 +12,7 @@ export class QueryBudgetDto {
   @IsOptional()
   @IsInt()
   @Min(1)
-  @Max(100)
+  @Max(1000)
   @Transform(({ value }) => parseInt(value))
   limit?: number = 10;
 
