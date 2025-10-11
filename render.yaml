@@ -3,8 +3,9 @@ services:
     name: logola-backend
     env: node
     plan: free
+    rootDir: .
     buildCommand: npm install && npm run build
-    startCommand: npm run start:prod
+    startCommand: node dist/main
     envVars:
       - key: NODE_ENV
         value: production
