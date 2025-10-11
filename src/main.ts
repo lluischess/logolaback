@@ -13,7 +13,7 @@ async function bootstrap() {
 
   // Configurar CORS para permitir conexiones desde Angular
   const allowedOrigins = process.env.NODE_ENV === 'production' 
-    ? [process.env.FRONTEND_URL, 'https://new.logolate.com', 'https://logolate.com']
+    ? [process.env.FRONTEND_URL, 'https://new.logolate.com', 'https://logolate.com', 'https://www.logolate.com']
     : ['http://localhost:4200', 'http://127.0.0.1:4200', 'http://localhost:4201', 'http://127.0.0.1:4201', 'http://localhost:4202', 'http://127.0.0.1:4202'];
 
   app.enableCors({
