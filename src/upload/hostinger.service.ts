@@ -40,14 +40,14 @@ export class HostingerService {
       const extension = path.extname(file.originalname);
       const filename = `${folder}_${timestamp}${extension}`;
       
-      // Ruta correcta en Hostinger: /public_html/uploads/{folder}
-      const remotePath = `/public_html/uploads/${folder}/${filename}`;
+      // Ruta sin /public_html/ porque el usuario FTP ya apunta ahí
+      const remotePath = `/uploads/${folder}/${filename}`;
       
       console.log('📁 Ruta remota FTP:', remotePath);
 
       // Crear directorio si no existe
       try {
-        await client.ensureDir(`/public_html/uploads/${folder}`);
+        await client.ensureDir(`/uploads/${folder}`);
         console.log('✅ Directorio verificado/creado');
       } catch (error) {
         console.log('⚠️ Error al crear directorio:', error.message);
@@ -115,9 +115,9 @@ export class HostingerService {
       // Extraer path del archivo desde la URL
       // Ej: https://www.logolate.com/uploads/products/image.png
       // pathname = /uploads/products/image.png
-      // remotePath = /public_html/uploads/products/image.png
+      // remotePath = /uploads/products/image.png (sin /public_html/ porque el FTP ya apunta ahí)
       const urlPath = new URL(imageUrl).pathname;
-      const remotePath = `/public_html${urlPath}`;
+      const remotePath = urlPath; // Ya no necesitamos agregar /public_html/
 
       await client.remove(remotePath);
 
