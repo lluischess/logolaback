@@ -17,7 +17,10 @@ export class HostingerService {
       const ftpUser = this.configService.get('FTP_USER') || 'u317949253.render';
       const ftpPassword = this.configService.get('FTP_PASSWORD');
       
-      console.log('🔗 Conectando FTP:', { host: ftpHost, user: ftpUser });
+      console.log('🔗 Intentando conectar FTP...');
+      console.log('   Host:', ftpHost);
+      console.log('   User:', ftpUser);
+      console.log('   Password configurado:', !!ftpPassword);
       
       if (!ftpPassword) {
         throw new Error('FTP_PASSWORD no configurada en variables de entorno');
@@ -29,6 +32,8 @@ export class HostingerService {
         password: ftpPassword,
         secure: false
       });
+      
+      console.log('✅ Conexión FTP establecida');
 
       // Generar nombre único para el archivo
       const timestamp = Date.now();
@@ -37,39 +42,53 @@ export class HostingerService {
       
       // Ruta correcta en Hostinger: /public_html/uploads/{folder}
       const remotePath = `/public_html/uploads/${folder}/${filename}`;
+      
+      console.log('📁 Ruta remota FTP:', remotePath);
 
       // Crear directorio si no existe
       try {
         await client.ensureDir(`/public_html/uploads/${folder}`);
+        console.log('✅ Directorio verificado/creado');
       } catch (error) {
-        console.log('Directorio ya existe o no se pudo crear');
+        console.log('⚠️ Error al crear directorio:', error.message);
       }
 
       // Subir archivo
+      console.log('📤 Iniciando subida del archivo...');
       if (file.buffer) {
         // Crear archivo temporal
         const tempPath = `/tmp/${filename}`;
         fs.writeFileSync(tempPath, file.buffer);
+        console.log('   Archivo temporal creado:', tempPath);
         
         await client.uploadFrom(tempPath, remotePath);
+        console.log('   ✅ Archivo subido por FTP');
         
         // Limpiar archivo temporal
         fs.unlinkSync(tempPath);
+        console.log('   🗑️ Archivo temporal eliminado');
       } else {
         await client.uploadFrom(file.path, remotePath);
+        console.log('   ✅ Archivo subido por FTP desde path');
       }
 
       // Construir URL pública
       const baseUrl = this.configService.get('FRONTEND_URL') || 'https://www.logolate.com';
       const publicUrl = `${baseUrl}/uploads/${folder}/${filename}`;
 
-      console.log('✅ Imagen subida correctamente a:', publicUrl);
+      console.log('✅ IMAGEN SUBIDA EXITOSAMENTE');
+      console.log('   URL pública:', publicUrl);
+      console.log('   Ruta FTP:', remotePath);
       return publicUrl;
 
     } catch (error) {
-      console.error('Error uploading to Hostinger:', error);
-      throw new Error('Failed to upload image to Hostinger');
+      console.error('❌ ERROR AL SUBIR IMAGEN A HOSTINGER');
+      console.error('   Tipo de error:', error.constructor.name);
+      console.error('   Mensaje:', error.message);
+      console.error('   Stack:', error.stack);
+      throw new Error(`Failed to upload image to Hostinger: ${error.message}`);
     } finally {
+      console.log('🔌 Cerrando conexión FTP');
       client.close();
     }
   }
