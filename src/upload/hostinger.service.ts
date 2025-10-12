@@ -72,6 +72,14 @@ export class HostingerService {
         console.log('   ✅ Archivo subido por FTP desde path');
       }
 
+      // Establecer permisos 644 (rw-r--r--) para que sea accesible públicamente
+      try {
+        await client.send('SITE CHMOD 644 ' + remotePath);
+        console.log('   🔐 Permisos establecidos a 644 (lectura pública)');
+      } catch (error) {
+        console.log('   ⚠️ No se pudieron establecer permisos automáticamente:', error.message);
+      }
+
       // Construir URL pública
       const baseUrl = this.configService.get('FRONTEND_URL') || 'https://www.logolate.com';
       const publicUrl = `${baseUrl}/uploads/${folder}/${filename}`;
