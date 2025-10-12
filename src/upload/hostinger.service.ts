@@ -34,13 +34,15 @@ export class HostingerService {
       const timestamp = Date.now();
       const extension = path.extname(file.originalname);
       const filename = `${folder}_${timestamp}${extension}`;
-      const remotePath = `/${folder}/${filename}`;
+      
+      // Ruta correcta en Hostinger: /public_html/uploads/{folder}
+      const remotePath = `/public_html/uploads/${folder}/${filename}`;
 
       // Crear directorio si no existe
       try {
-        await client.ensureDir(`/${folder}`);
+        await client.ensureDir(`/public_html/uploads/${folder}`);
       } catch (error) {
-        // El directorio ya existe
+        console.log('Directorio ya existe o no se pudo crear');
       }
 
       // Subir archivo
@@ -58,9 +60,10 @@ export class HostingerService {
       }
 
       // Construir URL pública
-      const baseUrl = this.configService.get('FRONTEND_URL') || 'https://logolate.com';
+      const baseUrl = this.configService.get('FRONTEND_URL') || 'https://www.logolate.com';
       const publicUrl = `${baseUrl}/uploads/${folder}/${filename}`;
 
+      console.log('✅ Imagen subida correctamente a:', publicUrl);
       return publicUrl;
 
     } catch (error) {
@@ -83,8 +86,11 @@ export class HostingerService {
       });
 
       // Extraer path del archivo desde la URL
+      // Ej: https://www.logolate.com/uploads/products/image.png
+      // pathname = /uploads/products/image.png
+      // remotePath = /public_html/uploads/products/image.png
       const urlPath = new URL(imageUrl).pathname;
-      const remotePath = urlPath.replace('/uploads/', 'uploads/');
+      const remotePath = `/public_html${urlPath}`;
 
       await client.remove(remotePath);
 

@@ -1,0 +1,20 @@
+# robots.txt para www.logolate.com
+
+User-agent: *
+Allow: /
+
+# Páginas importantes
+Allow: /productos
+Allow: /presupuesto
+Allow: /producto/
+
+# Bloquear áreas privadas/admin si las hay
+Disallow: /admin
+Disallow: /login
+Disallow: /api/
+
+# Sitemap
+Sitemap: https://logolaback.onrender.com/sitemap/xml
+
+# Crawl-delay para ser amable con los bots
+Crawl-delay: 1
